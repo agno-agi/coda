@@ -2,13 +2,11 @@
 Coda Evaluations
 ================
 
-Eval framework for testing Coda's capabilities.
+Eval framework for testing Coda's capabilities using Agno evals.
 """
 
-from dataclasses import dataclass, field
-
-
 CATEGORIES = [
+    "security",
     "location",
     "flow_tracing",
     "convention",
@@ -16,18 +14,4 @@ CATEGORIES = [
     "impact_analysis",
     "pr_review",
     "code_contribution",
-    "security",
 ]
-
-
-@dataclass
-class TestCase:
-    """A single evaluation test case."""
-
-    question: str
-    expected_strings: list[str] = field(default_factory=list)
-    expected_tools: list[str] = field(default_factory=list)
-    category: str = ""
-    exact_substring: str = ""
-    forbidden_strings: list[str] = field(default_factory=list)
-    quality_criteria: str = ""

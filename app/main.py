@@ -8,6 +8,7 @@ Run:
     python -m app.main
 """
 
+from contextlib import asynccontextmanager
 from os import getenv
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from agno.os import AgentOS
 
 from coda.team import coda
 from db import get_postgres_db
+from tasks.sync_repos import sync_all_repos
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -57,8 +59,27 @@ agent_os = AgentOS(
 
 app = agent_os.get_app()
 
+
+# ---------------------------------------------------------------------------
+# Repo sync (direct endpoint, bypasses the LLM)
+# ---------------------------------------------------------------------------
+@app.post("/sync")
+def sync_repos() -> dict[str, str]:
+    """Sync all configured repositories (clone missing, pull existing)."""
+    sync_all_repos()
+    return {"status": "ok"}
+
+
+@asynccontextmanager
+async def _lifespan(application):  # type: ignore[no-untyped-def]
+    sync_all_repos()
+    yield
+
+
+app.router.lifespan_context = _lifespan
+
 if __name__ == "__main__":
     agent_os.serve(
-        app="main:app",
+        app="app.main:app",
         reload=runtime_env == "dev",
     )

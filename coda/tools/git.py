@@ -1,5 +1,6 @@
 """Git tools for repository exploration and worktree management."""
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -27,6 +28,7 @@ class GitTools(Toolkit):
                 self.git_show,
                 self.list_repos,
                 self.repo_summary,
+                self.get_github_remote,
                 self.create_worktree,
                 self.list_worktrees,
                 self.remove_worktree,
@@ -51,13 +53,13 @@ class GitTools(Toolkit):
             raise ValueError(f"Repository not found: {resolved}")
         return resolved
 
-    def _run(self, cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    def _run(self, cmd: list[str], cwd: Path, timeout: int = 30) -> subprocess.CompletedProcess[str]:
         """Run a git command with standard settings."""
         return subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=timeout,
             cwd=cwd,
         )
 
@@ -266,6 +268,34 @@ class GitTools(Toolkit):
             logger.warning(f"repo_summary failed: {e}")
             return f"Error: {e}"
 
+    def get_github_remote(self, repo: str) -> str:
+        """Get the GitHub owner/repo identifier for a repository.
+
+        Parses the origin remote URL into ``owner/repo`` format
+        (e.g. ``"agno-agi/agno"``).  Works with both HTTPS and SSH URLs.
+
+        Args:
+            repo: Repository name (directory under the base repos path).
+
+        Returns:
+            The ``owner/repo`` string, or an error message.
+        """
+        try:
+            repo_path = self._repo_path(repo)
+            result = self._run(["git", "remote", "get-url", "origin"], cwd=repo_path)
+            if result.returncode != 0:
+                return f"Error: {result.stderr.strip()}"
+            url = result.stdout.strip()
+            # HTTPS: https://github.com/owner/repo.git
+            # SSH:   git@github.com:owner/repo.git
+            match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url)
+            if not match:
+                return f"Error: could not parse GitHub owner/repo from remote URL: {url}"
+            return match.group(1)
+        except Exception as e:
+            logger.warning(f"get_github_remote failed: {e}")
+            return f"Error: {e}"
+
     def create_worktree(
         self,
         repo: str,
@@ -289,7 +319,7 @@ class GitTools(Toolkit):
             repo_path = self._repo_path(repo)
 
             # Fetch latest refs (best-effort — may fail if no remote configured)
-            fetch_result = self._run(["git", "fetch", "origin"], cwd=repo_path)
+            fetch_result = self._run(["git", "fetch", "origin"], cwd=repo_path, timeout=120)
             if fetch_result.returncode != 0:
                 logger.warning(f"git fetch origin warning: {fetch_result.stderr.strip()}")
 

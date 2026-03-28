@@ -9,11 +9,11 @@ Adapted from gcode's coding workflow for Coda's multi-repo environment.
 from agno.agent import Agent
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
 from agno.tools.coding import CodingTools
+from agno.tools.github import GithubTools
 from agno.tools.reasoning import ReasoningTools
 
 from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
-from coda.tools.github import GitHubTools
 
 # ---------------------------------------------------------------------------
 # Instructions
@@ -97,8 +97,9 @@ rather than continuing to retry.
 
 ### 6. Push and PR
 - Use `run_shell` to `git push`.
-- Use `create_pr` to open a pull request with a description of what \
-changed and why.
+- Use `get_github_remote(repo)` to get the `owner/repo` identifier, then \
+use `create_pull_request` to open a pull request with a description of \
+what changed and why.
 - Never merge your own PRs. The engineer reviews and merges.
 
 ### 7. Report
@@ -157,7 +158,19 @@ coder = Agent(
     tools=[
         CodingTools(base_dir=REPOS_DIR, all=True, shell_timeout=120),
         GitTools(base_dir=str(REPOS_DIR)),
-        GitHubTools(),
+        GithubTools(
+            include_tools=[
+                "get_pull_request",
+                "get_pull_requests",
+                "get_pull_request_changes",
+                "get_pull_request_comments",
+                "create_pull_request",
+                "get_issue",
+                "list_issues",
+                "create_issue",
+                "comment_on_issue",
+            ],
+        ),
         ReasoningTools(),
     ],
     add_datetime_to_context=True,

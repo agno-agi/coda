@@ -50,17 +50,16 @@ RUN mkdir -p /repos \
 # ---------------------------------------------------------------------------
 # GitHub token configuration
 # ---------------------------------------------------------------------------
-# The GITHUB_TOKEN env var is used for cloning private repos and GitHub API.
+# The GITHUB_ACCESS_TOKEN env var is used for cloning private repos and GitHub API.
 # Git credential helper stores it in memory (never written to disk).
 # ---------------------------------------------------------------------------
-RUN git config --system credential.helper 'store --file=/dev/null' \
-    && printf '%s\n' \
+RUN printf '%s\n' \
         '#!/bin/bash' \
-        'if [ -n "$GITHUB_TOKEN" ]; then' \
+        'if [ -n "$GITHUB_ACCESS_TOKEN" ]; then' \
         '    echo "protocol=https"' \
         '    echo "host=github.com"' \
         '    echo "username=x-access-token"' \
-        '    echo "password=$GITHUB_TOKEN"' \
+        '    echo "password=$GITHUB_ACCESS_TOKEN"' \
         'fi' \
         > /usr/local/bin/git-credential-coda \
     && chmod +x /usr/local/bin/git-credential-coda \

@@ -9,11 +9,11 @@ repositories. Read-only — never writes, edits, or deletes files.
 from agno.agent import Agent
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
 from agno.tools.coding import CodingTools
+from agno.tools.github import GithubTools
 from agno.tools.reasoning import ReasoningTools
 
 from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
-from coda.tools.github import GitHubTools
 
 # ---------------------------------------------------------------------------
 # Instructions
@@ -64,12 +64,13 @@ iteratively.
 ## PR Review Workflow
 
 When reviewing a PR:
-1. Fetch PR details and diff via `get_pr` / `get_pr_diff`.
-2. Read the changed files for full context.
-3. Check `get_pr_comments` for existing review feedback.
-4. Recall conventions relevant to the changed areas.
-5. Analyze against conventions, known gotchas, and code quality.
-6. Report findings with specific file:line citations.
+1. Use `get_github_remote(repo)` to get the `owner/repo` identifier.
+2. Fetch PR details and diff via `get_pull_request` / `get_pull_request_changes`.
+3. Read the changed files for full context.
+4. Check `get_pull_request_comments` for existing review feedback.
+5. Recall conventions relevant to the changed areas.
+6. Analyze against conventions, known gotchas, and code quality.
+7. Report findings with specific file:line citations.
 
 ## Git History Analysis
 
@@ -137,7 +138,19 @@ explorer = Agent(
             enable_run_shell=False,
         ),
         GitTools(base_dir=str(REPOS_DIR)),
-        GitHubTools(),
+        GithubTools(
+            include_tools=[
+                "get_pull_request",
+                "get_pull_requests",
+                "get_pull_request_changes",
+                "get_pull_request_comments",
+                "get_pull_request_with_details",
+                "get_issue",
+                "list_issues",
+                "list_issue_comments",
+                "search_code",
+            ],
+        ),
         ReasoningTools(),
     ],
     add_datetime_to_context=True,

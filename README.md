@@ -31,7 +31,7 @@ git remote remove origin
 
 ```bash
 cp example.env .env
-# Edit .env: add OPENAI_API_KEY and GITHUB_TOKEN
+# Edit .env: add OPENAI_API_KEY and GITHUB_ACCESS_TOKEN
 
 cp example.repos.yaml repos.yaml
 # Edit repos.yaml: add the repositories Coda should learn
@@ -166,7 +166,7 @@ python -m evals.run_evals --category security
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `GITHUB_TOKEN` | Yes | Fine-grained PAT ([setup guide](GITHUB_ACCESS.md)) |
+| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup guide](GITHUB_ACCESS.md)) |
 | `SLACK_TOKEN` | No | Slack bot token ([setup guide](SLACK_CONNECT.md)) |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `CODA_MODEL` | No | Model for all agents (default: gpt-5.4) |

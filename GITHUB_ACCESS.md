@@ -48,7 +48,7 @@ GitHub shows the token **once**. Copy it immediately. If you lose it, you'll nee
 Add it to your `.env` file:
 
 ```bash
-GITHUB_TOKEN=github_pat_xxxxxxxxxxxxxxxxxxxxx
+GITHUB_ACCESS_TOKEN=github_pat_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 The `compose.yaml` passes this into the container, and the Dockerfile configures a git credential helper that uses it automatically. Coda never sees the raw token — it just runs `git clone` and authentication happens transparently.
@@ -61,7 +61,7 @@ The Dockerfile sets up a custom git credential helper:
 git clone https://github.com/agno-agi/some-repo.git
 ```
 
-Git asks the credential helper for credentials. The helper reads `$GITHUB_TOKEN` from the environment and returns it. The token is never written to disk — it lives only in the environment variable.
+Git asks the credential helper for credentials. The helper reads `$GITHUB_ACCESS_TOKEN` from the environment and returns it. The token is never written to disk — it lives only in the environment variable.
 
 This means:
 - Coda uses `git clone https://github.com/...` (not SSH, not token-in-URL)

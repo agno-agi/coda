@@ -78,7 +78,7 @@ railway add --service coda \
     --variables "WAIT_FOR_DB=True" \
     --variables "REPOS_DIR=/repos" \
     --variables "OPENAI_API_KEY=${OPENAI_API_KEY}" \
-    --variables "GITHUB_TOKEN=${GITHUB_TOKEN:-}" \
+    --variables "GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-}" \
     --variables "SLACK_TOKEN=${SLACK_TOKEN:-}" \
     --variables "SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}" \
     --variables "PORT=8000"

@@ -16,7 +16,6 @@ from os import getenv
 from pathlib import Path
 
 import yaml  # type: ignore[import-untyped]
-
 from agno.scheduler import ScheduleManager
 
 from coda.agents.settings import REPOS_DIR
@@ -96,14 +95,7 @@ if __name__ == "__main__":
     schedule = mgr.create(
         name="sync-repos",
         cron="*/5 * * * *",
-        endpoint="/teams/coda/runs",
-        payload={
-            "message": (
-                "Sync all configured repositories. "
-                "For each repo in repos.yaml: git fetch origin && git reset --hard origin/<branch>. "
-                "Report which repos were synced."
-            ),
-        },
+        endpoint="/sync",
         timezone="UTC",
         description="Sync all configured repos every 5 minutes",
         if_exists="update",

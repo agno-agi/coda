@@ -14,6 +14,7 @@ dependencies = [
     "openai",
     "pgvector",
     "psycopg[binary]",
+    "PyGithub",
     "sqlalchemy",
     "opentelemetry-api",
     "opentelemetry-sdk",
@@ -46,7 +47,7 @@ plugins = ["pydantic.mypy"]
 exclude = [".venv*"]
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*", "setuptools.*", "agno.*", "httpx.*", "yaml.*"]
+module = ["pgvector.*", "setuptools.*", "agno.*", "httpx.*", "yaml.*", "github.*"]
 ignore_missing_imports = true
 
 [tool.uv.pip]

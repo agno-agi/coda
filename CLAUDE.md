@@ -8,7 +8,8 @@ Multi-agent codebase team built with Agno. Lives in Slack, understands code by s
 - Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer)
 - Shared settings: `coda/agents/settings.py` (DB, REPOS_DIR, learnings KB)
 - API server: `app/main.py` (FastAPI + AgentOS + Slack interface)
-- Custom tools: `coda/tools/git.py` (GitTools), `coda/tools/github.py` (GitHubTools)
+- Custom tools: `coda/tools/git.py` (GitTools)
+- GitHub tools: Agno built-in `GithubTools` (scoped per agent)
 - Database: PostgreSQL + pgvector (for learnings only, not code indexing)
 - Repos: `/repos` volume (cloned repos, searched on disk)
 
@@ -22,8 +23,8 @@ Coda (Team, TasksMode, gpt-5.4)
 ```
 
 - **Coda (leader):** Triages requests, delegates to specialists, synthesizes results
-- **Coder:** CodingTools (full), GitTools, GitHubTools, ReasoningTools
-- **Explorer:** CodingTools (read-only), GitTools, GitHubTools, ReasoningTools
+- **Coder:** CodingTools (full), GitTools, GithubTools (write), ReasoningTools
+- **Explorer:** CodingTools (read-only), GitTools, GithubTools (read-only), ReasoningTools
 
 All agents share the same `coda_learnings` knowledge base via individual LearningMachine instances.
 
@@ -32,7 +33,7 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 - **TasksMode:** Leader decomposes goals into tasks, delegates to members, loops until done
 - **CodingTools:** file read/write/edit, shell, grep, find, ls (Coder: all=True, Explorer: read-only)
 - **GitTools:** git log/diff/blame/show, repo listing, worktree lifecycle (create/list/remove)
-- **GitHubTools:** PR read/review, PR creation via GitHub REST API
+- **GithubTools:** Agno built-in — PR read/review/create, issues, code search (scoped via include_tools)
 - **ReasoningTools:** `think` tool for complex reasoning chains
 - **LearningMachine:** saves and retrieves team conventions, patterns, gotchas (AGENTIC mode)
 - **Agentic Memory:** tracks user preferences and observations (team-level only)
@@ -52,17 +53,15 @@ coda/
 │   │   ├── coder.py      # Coder agent
 │   │   └── explorer.py   # Explorer agent
 │   └── tools/
-│       ├── git.py        # GitTools toolkit
-│       └── github.py     # GitHubTools toolkit
+│       └── git.py        # GitTools toolkit
 ├── db/
 │   ├── session.py        # PostgreSQL session factory + knowledge factory
 │   └── url.py            # Database URL builder
 ├── tasks/
 │   └── sync_repos.py     # Repo sync scheduled task
 ├── evals/
-│   ├── run_evals.py      # Eval runner
-│   ├── test_cases.py     # Test cases
-│   └── grader.py         # Grading logic
+│   ├── run_evals.py      # Eval runner (Agno evals)
+│   └── test_cases.py     # Test cases (security + tool routing)
 ├── scripts/
 ├── compose.yaml
 ├── Dockerfile
@@ -103,7 +102,7 @@ python -m evals.run_evals --category security  # Run security evals
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `GITHUB_TOKEN` | Yes | Fine-grained PAT (Contents RW, PRs RW, Metadata R) |
+| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT (Contents RW, PRs RW, Metadata R) |
 | `SLACK_TOKEN` | No | Slack bot token |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `DB_*` | No | Database config (defaults to localhost) |
