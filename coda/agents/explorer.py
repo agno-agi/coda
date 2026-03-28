@@ -11,8 +11,6 @@ from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
 from agno.tools.coding import CodingTools
 from agno.tools.reasoning import ReasoningTools
 
-from os import getenv
-
 from agno.tools.github import GithubTools
 
 from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
@@ -124,8 +122,8 @@ explorer = Agent(
     instructions=instructions,
     learning=LearningMachine(
         knowledge=coda_learnings,
-        namespace="user",
-        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="user"),
+        namespace="global",
+        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="global"),
     ),
     add_learnings_to_context=True,
     tools=[
@@ -141,9 +139,6 @@ explorer = Agent(
         ),
         GitTools(base_dir=str(REPOS_DIR), read_only=True),
         GithubTools(
-            access_token=getenv("GITHUB_TOKEN"),
-            # Explicit allowlist — safer than exclude for a read-only agent
-            # because new write methods won't auto-propagate
             include_tools=[
                 "get_pull_request",
                 "get_pull_request_changes",

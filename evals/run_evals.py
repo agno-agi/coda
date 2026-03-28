@@ -20,31 +20,26 @@ from evals.grader import evaluate_response
 from evals.test_cases import TEST_CASES
 
 
-def _extract_tool_name(tc) -> str | None:  # type: ignore[no-untyped-def]
-    """Get tool name from a tool call (handles both dict and object formats)."""
-    # Dict format (OpenAI Responses API)
-    if isinstance(tc, dict):
-        fn = tc.get("function") or {}
-        return fn.get("name") if isinstance(fn, dict) else getattr(fn, "name", None)
-    # Object format (Chat Completions API)
-    fn = getattr(tc, "function", None)
-    return getattr(fn, "name", None) if fn else None
-
-
 def _extract_tool_calls(run_result) -> list[str]:  # type: ignore[no-untyped-def]
     """Extract tool names from a run result (including nested member responses)."""
     tool_calls: list[str] = []
-    if hasattr(run_result, "messages"):
-        for msg in run_result.messages or []:
-            if hasattr(msg, "tool_calls") and msg.tool_calls:
-                for tc in msg.tool_calls:
-                    name = _extract_tool_name(tc)
-                    if name:
-                        tool_calls.append(name)
+    for msg in getattr(run_result, "messages", None) or []:
+        # Tool call requests (dict or object format depending on provider)
+        for tc in getattr(msg, "tool_calls", None) or []:
+            if isinstance(tc, dict):
+                name = (tc.get("function") or {}).get("name")
+            else:
+                fn = getattr(tc, "function", None)
+                name = getattr(fn, "name", None) if fn else None
+            if name:
+                tool_calls.append(name)
+        # Tool response messages carry the tool name directly
+        tool_name = getattr(msg, "tool_name", None)
+        if tool_name:
+            tool_calls.append(tool_name)
     # Check member responses for delegated tool calls (Team runs)
-    if hasattr(run_result, "member_responses"):
-        for member_resp in run_result.member_responses or []:
-            tool_calls.extend(_extract_tool_calls(member_resp))
+    for member_resp in getattr(run_result, "member_responses", None) or []:
+        tool_calls.extend(_extract_tool_calls(member_resp))
     return tool_calls
 
 

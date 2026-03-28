@@ -11,8 +11,6 @@ from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
 from agno.tools.coding import CodingTools
 from agno.tools.reasoning import ReasoningTools
 
-from os import getenv
-
 from agno.tools.github import GithubTools
 
 from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
@@ -153,14 +151,14 @@ coder = Agent(
     instructions=instructions,
     learning=LearningMachine(
         knowledge=coda_learnings,
-        namespace="user",
-        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="user"),
+        namespace="global",
+        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="global"),
     ),
     add_learnings_to_context=True,
     tools=[
         CodingTools(base_dir=REPOS_DIR, all=True, shell_timeout=120),
         GitTools(base_dir=str(REPOS_DIR)),
-        GithubTools(access_token=getenv("GITHUB_TOKEN")),
+        GithubTools(),
         ReasoningTools(),
     ],
     add_datetime_to_context=True,

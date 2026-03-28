@@ -49,15 +49,6 @@ class GitTools(Toolkit):
             raise ValueError(f"Repository not found: {resolved}")
         return resolved
 
-    @staticmethod
-    def _validate_task_name(task_name: str) -> str | None:
-        """Return an error message if task_name contains unsafe characters."""
-        import re
-
-        if not task_name or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*", task_name):
-            return f"Invalid task name: must be alphanumeric with hyphens/underscores/dots, got: {task_name!r}"
-        return None
-
     def _run(self, cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
         """Run a git command with standard settings."""
         return subprocess.run(
@@ -293,8 +284,6 @@ class GitTools(Toolkit):
             The absolute path to the new worktree, or an error message.
         """
         try:
-            if err := self._validate_task_name(task_name):
-                return err
             repo_path = self._repo_path(repo)
 
             # Fetch latest refs (best-effort — may fail if no remote configured)
@@ -354,8 +343,6 @@ class GitTools(Toolkit):
             Success confirmation or an error message.
         """
         try:
-            if err := self._validate_task_name(task_name):
-                return err
             repo_path = self._repo_path(repo)
             worktree_rel = f"worktrees/{task_name}"
             branch_name = f"coda/{task_name}"
