@@ -267,7 +267,9 @@ class GitHubTools(Toolkit):
         except httpx.HTTPError as exc:
             return f"Request failed: {exc}"
 
-    def create_pr(self, repo: str, branch: str, title: str, body: str, base: str = "main") -> str:
+    def create_pr(
+        self, repo: str, branch: str, title: str, body: str, base: str = "", draft: bool = False
+    ) -> str:
         """Create a new pull request.
 
         Args:
@@ -275,7 +277,8 @@ class GitHubTools(Toolkit):
             branch: The head branch containing the changes.
             title: PR title.
             body: PR description / body text.
-            base: The base branch to merge into (default ``"main"``).
+            base: The base branch to merge into. If empty, auto-detects the repo's default branch.
+            draft: If True, create a draft PR instead of a ready-for-review PR.
 
         Returns:
             The URL of the newly created PR, or an error message on failure.
@@ -284,16 +287,24 @@ class GitHubTools(Toolkit):
             return "GitHub token not configured."
 
         try:
-            resp = self._request(
-                "POST",
-                f"/repos/{repo}/pulls",
-                json={
-                    "head": branch,
-                    "base": base,
-                    "title": title,
-                    "body": body,
-                },
-            )
+            # Auto-detect default branch if base not specified
+            if not base:
+                repo_resp = self._request("GET", f"/repos/{repo}")
+                if repo_resp.status_code == 200:
+                    base = repo_resp.json().get("default_branch", "main")
+                else:
+                    base = "main"
+
+            payload: dict[str, Any] = {
+                "head": branch,
+                "base": base,
+                "title": title,
+                "body": body,
+            }
+            if draft:
+                payload["draft"] = True
+
+            resp = self._request("POST", f"/repos/{repo}/pulls", json=payload)
             if resp.status_code not in (200, 201):
                 return f"GitHub API error {resp.status_code}: {resp.text}"
 

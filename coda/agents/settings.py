@@ -8,11 +8,14 @@ so all agents share the same resources.
 from os import getenv
 from pathlib import Path
 
+from agno.models.openai import OpenAIResponses
+
 from db import create_knowledge, get_postgres_db
 
 agent_db = get_postgres_db()
 REPOS_DIR = Path(getenv("REPOS_DIR", str(Path(__file__).parents[1] / "repos")))
 REPOS_DIR.mkdir(exist_ok=True)
+MODEL = OpenAIResponses(id=getenv("CODA_MODEL", "gpt-5.4"))
 
 # Learnings knowledge base (vector search over learned patterns — NOT code).
 # Created once here, shared by all agents via their own LearningMachine instances.

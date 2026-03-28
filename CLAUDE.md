@@ -103,7 +103,7 @@ python -m evals.run_evals --category security  # Run security evals
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `GITHUB_TOKEN` | Yes | Fine-grained PAT (Contents RW, PRs RW, Issues R) |
+| `GITHUB_TOKEN` | Yes | Fine-grained PAT (Contents RW, PRs RW, Metadata R) |
 | `SLACK_TOKEN` | No | Slack bot token |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `DB_*` | No | Database config (defaults to localhost) |

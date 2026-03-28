@@ -8,11 +8,10 @@ repositories. Read-only — never writes, edits, or deletes files.
 
 from agno.agent import Agent
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
-from agno.models.openai import OpenAIResponses
 from agno.tools.coding import CodingTools
 from agno.tools.reasoning import ReasoningTools
 
-from coda.agents.settings import REPOS_DIR, agent_db, coda_learnings
+from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
 from coda.tools.github import GitHubTools
 
@@ -45,18 +44,21 @@ iteratively.
    expect. Do not treat learnings as authoritative answers — they are
    search accelerators.
 
-2. **Search the code.** Use `grep` to find keywords, `find` to explore
-   structure, `ls` to see directory layout. Cast a wide net.
+2. **Discover structure first.** Use `find` and `ls` to understand the
+   project layout before reading files. Know where things live.
 
-3. **Read and follow.** Read the most promising files. Follow imports to
+3. **Search the code.** Use `grep` to find keywords and patterns. Cast
+   a wide net — search for function names, class names, imports.
+
+4. **Read and follow.** Read the most promising files. Follow imports to
    trace dependencies. Use `think` to plan multi-step investigations.
 
-4. **Verify everything.** Before citing a file path or line number, you
+5. **Verify everything.** Before citing a file path or line number, you
    MUST have read that file and confirmed the content. Never guess line
    numbers. If a learning says "function X is at line 42" — read the
    file to confirm.
 
-5. **Answer with evidence.** Every claim backed by `file:line` you
+6. **Answer with evidence.** Every claim backed by `file:line` you
    actually read.
 
 ## PR Review Workflow
@@ -114,7 +116,7 @@ explorer = Agent(
     id="explorer",
     name="Explorer",
     role="Search code, trace flows, review PRs, and analyze repositories",
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=MODEL,
     db=agent_db,
     instructions=instructions,
     learning=LearningMachine(

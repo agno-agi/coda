@@ -13,13 +13,12 @@ Test:
 from os import getenv
 
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
-from agno.models.openai import OpenAIResponses
 from agno.team.mode import TeamMode
 from agno.team.team import Team
 from agno.tools.slack import SlackTools
 
 from coda.agents import coder, explorer
-from coda.agents.settings import coda_learnings
+from coda.agents.settings import MODEL, coda_learnings
 from db import get_postgres_db
 
 # ---------------------------------------------------------------------------
@@ -68,6 +67,8 @@ You have two specialists:
 ## How You Work
 
 1. **Triage.** Read the request. Determine which specialist(s) are needed.
+   If the request is ambiguous or could go either way, ask the user for
+   clarification before delegating.
 2. **Search learnings.** Check learnings for context that helps you route
    correctly and provide relevant background to your specialists.
 3. **Create tasks.** Break the work into tasks and assign to the right
@@ -106,6 +107,9 @@ says "ok do it" after an explanation, delegate to Coder.
 # ---------------------------------------------------------------------------
 # Tools (leader-only)
 # ---------------------------------------------------------------------------
+# SlackTools: only send_message and list_channels are enabled.
+# Thread replies and history are handled by AgentOS's Slack interface,
+# not by the agent directly. File upload/download disabled for security.
 tools: list = []
 if getenv("SLACK_TOKEN"):
     tools.append(
@@ -126,7 +130,7 @@ coda = Team(
     id="coda",
     name="Coda",
     mode=TeamMode.tasks,
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=MODEL,
     members=[coder, explorer],
     db=team_db,
     instructions=instructions,

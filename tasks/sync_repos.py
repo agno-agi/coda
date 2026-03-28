@@ -19,9 +19,9 @@ import yaml  # type: ignore[import-untyped]
 
 from agno.scheduler import ScheduleManager
 
+from coda.agents.settings import REPOS_DIR
 from db import get_postgres_db
 
-REPOS_DIR = Path(getenv("REPOS_DIR", str(Path(__file__).parents[1] / "coda" / "repos")))
 REPOS_CONFIG = Path(getenv("REPOS_CONFIG", str(Path(__file__).parents[1] / "repos.yaml")))
 
 
@@ -52,29 +52,40 @@ def sync_all_repos() -> None:
         if not repo_path.exists():
             # Clone
             print(f"Cloning {url} → {repo_path}")
-            subprocess.run(
+            result = subprocess.run(
                 ["git", "clone", "--branch", branch, url, str(repo_path)],
                 capture_output=True,
                 text=True,
                 timeout=300,
             )
+            if result.returncode != 0:
+                print(f"  FAILED to clone {name}: {result.stderr.strip()}")
+            else:
+                print(f"  Cloned {name}")
         else:
             # Fetch and reset main clone (worktrees are unaffected)
             print(f"Syncing {name} ({branch})")
-            subprocess.run(
+            result = subprocess.run(
                 ["git", "fetch", "origin"],
                 cwd=str(repo_path),
                 capture_output=True,
                 text=True,
                 timeout=120,
             )
-            subprocess.run(
+            if result.returncode != 0:
+                print(f"  FAILED to fetch {name}: {result.stderr.strip()}")
+                continue
+            result = subprocess.run(
                 ["git", "reset", "--hard", f"origin/{branch}"],
                 cwd=str(repo_path),
                 capture_output=True,
                 text=True,
                 timeout=30,
             )
+            if result.returncode != 0:
+                print(f"  FAILED to reset {name}: {result.stderr.strip()}")
+            else:
+                print(f"  Synced {name}")
 
 
 # ---------------------------------------------------------------------------

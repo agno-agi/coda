@@ -8,11 +8,10 @@ Adapted from gcode's coding workflow for Coda's multi-repo environment.
 
 from agno.agent import Agent
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
-from agno.models.openai import OpenAIResponses
 from agno.tools.coding import CodingTools
 from agno.tools.reasoning import ReasoningTools
 
-from coda.agents.settings import REPOS_DIR, agent_db, coda_learnings
+from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
 from coda.tools.github import GitHubTools
 
@@ -79,10 +78,15 @@ recent commits/diffs to rebuild context.
 - Use `edit_file` for targeted changes with enough surrounding context.
 - If an edit fails (no match or multiple matches), re-read the file and \
 adjust. Save a learning about why it failed.
+- If an edit fails 3 times, stop and explain the blocker to the user \
+rather than continuing to retry.
 
 ### 4. Verify
 - Run tests after making changes. Always.
 - If there are no tests, write them.
+- Detect the test framework: look for `pytest.ini`, `setup.cfg [tool:pytest]`, \
+`package.json` scripts.test, `Makefile` test targets, `Cargo.toml`, or \
+`go.mod`. Save what you find as a learning for the repo.
 - Use `run_shell` for git operations, linting, type checking, builds.
 
 ### 5. Commit
@@ -141,7 +145,7 @@ coder = Agent(
     id="coder",
     name="Coder",
     role="Write, test, and ship code in isolated git worktrees",
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=MODEL,
     db=agent_db,
     instructions=instructions,
     learning=LearningMachine(
