@@ -18,22 +18,20 @@ class GitTools(Toolkit):
     All paths are validated to stay within the configured base directory.
     """
 
-    def __init__(self, base_dir: str = "/repos"):
-        super().__init__(
-            name="git_tools",
-            tools=[
-                self.git_log,
-                self.git_diff,
-                self.git_blame,
-                self.git_show,
-                self.list_repos,
-                self.repo_summary,
-                self.get_github_remote,
-                self.create_worktree,
-                self.list_worktrees,
-                self.remove_worktree,
-            ],
-        )
+    def __init__(self, base_dir: str = "/repos", read_only: bool = False):
+        tools: list = [
+            self.git_log,
+            self.git_diff,
+            self.git_blame,
+            self.git_show,
+            self.list_repos,
+            self.repo_summary,
+            self.get_github_remote,
+            self.list_worktrees,
+        ]
+        if not read_only:
+            tools += [self.create_worktree, self.remove_worktree]
+        super().__init__(name="git_tools", tools=tools)
         self.base_dir = Path(base_dir)
 
     # ------------------------------------------------------------------

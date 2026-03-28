@@ -9,12 +9,14 @@ authors = [{ name = "Agno", email = "hello@agno.com" }]
 
 dependencies = [
     "agno",
+    "aiohttp",
     "fastapi[standard]",
     "httpx",
     "openai",
     "pgvector",
     "psycopg[binary]",
     "PyGithub",
+    "slack-sdk",
     "sqlalchemy",
     "opentelemetry-api",
     "opentelemetry-sdk",

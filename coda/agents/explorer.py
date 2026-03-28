@@ -122,8 +122,8 @@ explorer = Agent(
     instructions=instructions,
     learning=LearningMachine(
         knowledge=coda_learnings,
-        namespace="user",
-        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="user"),
+        namespace="global",
+        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="global"),
     ),
     add_learnings_to_context=True,
     tools=[
@@ -137,7 +137,7 @@ explorer = Agent(
             enable_write_file=False,
             enable_run_shell=False,
         ),
-        GitTools(base_dir=str(REPOS_DIR)),
+        GitTools(base_dir=str(REPOS_DIR), read_only=True),
         GithubTools(
             include_tools=[
                 "get_pull_request",
