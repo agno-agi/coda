@@ -16,7 +16,6 @@ from os import getenv
 from pathlib import Path
 
 import yaml  # type: ignore[import-untyped]
-
 from agno.scheduler import ScheduleManager
 
 from coda.agents.settings import REPOS_DIR

@@ -20,6 +20,17 @@ from evals.grader import evaluate_response
 from evals.test_cases import TEST_CASES
 
 
+def _extract_tool_name(tc) -> str | None:  # type: ignore[no-untyped-def]
+    """Get tool name from a tool call (handles both dict and object formats)."""
+    # Dict format (OpenAI Responses API)
+    if isinstance(tc, dict):
+        fn = tc.get("function") or {}
+        return fn.get("name") if isinstance(fn, dict) else getattr(fn, "name", None)
+    # Object format (Chat Completions API)
+    fn = getattr(tc, "function", None)
+    return getattr(fn, "name", None) if fn else None
+
+
 def _extract_tool_calls(run_result) -> list[str]:  # type: ignore[no-untyped-def]
     """Extract tool names from a run result (including nested member responses)."""
     tool_calls: list[str] = []
@@ -27,8 +38,9 @@ def _extract_tool_calls(run_result) -> list[str]:  # type: ignore[no-untyped-def
         for msg in run_result.messages or []:
             if hasattr(msg, "tool_calls") and msg.tool_calls:
                 for tc in msg.tool_calls:
-                    if hasattr(tc, "function") and hasattr(tc.function, "name"):
-                        tool_calls.append(tc.function.name)
+                    name = _extract_tool_name(tc)
+                    if name:
+                        tool_calls.append(name)
     # Check member responses for delegated tool calls (Team runs)
     if hasattr(run_result, "member_responses"):
         for member_resp in run_result.member_responses or []:

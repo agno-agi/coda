@@ -21,18 +21,17 @@ class GitHubTools(Toolkit):
     gracefully so the agent always gets a useful message.
     """
 
-    def __init__(self) -> None:
-        super().__init__(
-            name="github_tools",
-            tools=[
-                self.get_pr,
-                self.get_pr_diff,
-                self.get_pr_comments,
-                self.list_open_prs,
-                self.get_issue,
-                self.create_pr,
-            ],
-        )
+    def __init__(self, read_only: bool = False) -> None:
+        tools: list = [
+            self.get_pr,
+            self.get_pr_diff,
+            self.get_pr_comments,
+            self.list_open_prs,
+            self.get_issue,
+        ]
+        if not read_only:
+            tools.append(self.create_pr)
+        super().__init__(name="github_tools", tools=tools)
         self.token: str = getenv("GITHUB_TOKEN", "")
         self.base_url: str = "https://api.github.com"
 
@@ -267,9 +266,7 @@ class GitHubTools(Toolkit):
         except httpx.HTTPError as exc:
             return f"Request failed: {exc}"
 
-    def create_pr(
-        self, repo: str, branch: str, title: str, body: str, base: str = "", draft: bool = False
-    ) -> str:
+    def create_pr(self, repo: str, branch: str, title: str, body: str, base: str = "", draft: bool = False) -> str:
         """Create a new pull request.
 
         Args:

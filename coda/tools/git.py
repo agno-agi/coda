@@ -17,21 +17,19 @@ class GitTools(Toolkit):
     All paths are validated to stay within the configured base directory.
     """
 
-    def __init__(self, base_dir: str = "/repos"):
-        super().__init__(
-            name="git_tools",
-            tools=[
-                self.git_log,
-                self.git_diff,
-                self.git_blame,
-                self.git_show,
-                self.list_repos,
-                self.repo_summary,
-                self.create_worktree,
-                self.list_worktrees,
-                self.remove_worktree,
-            ],
-        )
+    def __init__(self, base_dir: str = "/repos", read_only: bool = False):
+        tools: list = [
+            self.git_log,
+            self.git_diff,
+            self.git_blame,
+            self.git_show,
+            self.list_repos,
+            self.repo_summary,
+            self.list_worktrees,
+        ]
+        if not read_only:
+            tools += [self.create_worktree, self.remove_worktree]
+        super().__init__(name="git_tools", tools=tools)
         self.base_dir = Path(base_dir)
 
     # ------------------------------------------------------------------
@@ -50,6 +48,15 @@ class GitTools(Toolkit):
         if not resolved.is_dir():
             raise ValueError(f"Repository not found: {resolved}")
         return resolved
+
+    @staticmethod
+    def _validate_task_name(task_name: str) -> str | None:
+        """Return an error message if task_name contains unsafe characters."""
+        import re
+
+        if not task_name or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*", task_name):
+            return f"Invalid task name: must be alphanumeric with hyphens/underscores/dots, got: {task_name!r}"
+        return None
 
     def _run(self, cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
         """Run a git command with standard settings."""
@@ -286,6 +293,8 @@ class GitTools(Toolkit):
             The absolute path to the new worktree, or an error message.
         """
         try:
+            if err := self._validate_task_name(task_name):
+                return err
             repo_path = self._repo_path(repo)
 
             # Fetch latest refs (best-effort — may fail if no remote configured)
@@ -345,6 +354,8 @@ class GitTools(Toolkit):
             Success confirmation or an error message.
         """
         try:
+            if err := self._validate_task_name(task_name):
+                return err
             repo_path = self._repo_path(repo)
             worktree_rel = f"worktrees/{task_name}"
             branch_name = f"coda/{task_name}"

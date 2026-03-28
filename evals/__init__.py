@@ -7,7 +7,6 @@ Eval framework for testing Coda's capabilities.
 
 from dataclasses import dataclass, field
 
-
 CATEGORIES = [
     "location",
     "flow_tracing",
