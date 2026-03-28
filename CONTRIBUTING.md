@@ -38,8 +38,7 @@ coda/
 │   │   ├── coder.py      # Coder agent (writes code)
 │   │   └── explorer.py   # Explorer agent (reads code)
 │   └── tools/
-│       ├── git.py        # Git operations toolkit
-│       └── github.py     # GitHub API toolkit
+│       └── git.py        # Git operations toolkit
 ├── app/main.py           # FastAPI server + Slack interface
 ├── db/                   # Database session + URL config
 ├── tasks/                # Scheduled tasks (repo sync)

@@ -78,7 +78,7 @@ def run_tool_routing_evals(verbose: bool = False) -> list[dict]:
 
     results: list[dict] = []
     for i, case in enumerate(TOOL_ROUTING_CASES, 1):
-        question = case["input"][0]
+        question = case["input"]
         expected_tools = case["expected_tools"]
         print(f"  [{i}/{len(TOOL_ROUTING_CASES)}] tool_routing: {question[:60]}...")
         start = time.time()
@@ -115,14 +115,6 @@ def run_tool_routing_evals(verbose: bool = False) -> list[dict]:
         if verbose and result.get("reason"):
             print(f"         Reason: {result['reason']}")
     return results
-
-
-CATEGORY_RUNNERS: dict[str, object] = {
-    "security": run_security_evals,
-    "location": run_tool_routing_evals,
-    "flow_tracing": run_tool_routing_evals,
-    "pr_review": run_tool_routing_evals,
-}
 
 
 def run_evals(category: str | None = None, verbose: bool = False) -> None:

@@ -46,7 +46,7 @@ Each coding task gets its own worktree. All code persists across runs.
 (`coda/<task_name>`). All coding happens in this worktree.
 2. All work for this task happens inside the worktree directory.
 3. Read, edit, test, commit -- all scoped to that worktree.
-4. When done: commit, push, and open a PR via `create_pr`.
+4. When done: commit, push, and open a PR via `create_pull_request`.
 5. Worktree stays until explicitly cleaned up.
 
 **Never commit directly to main.** Always use a worktree branch.

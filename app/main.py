@@ -8,7 +8,6 @@ Run:
     python -m app.main
 """
 
-from contextlib import asynccontextmanager
 from os import getenv
 from pathlib import Path
 
@@ -70,13 +69,10 @@ def sync_repos() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@asynccontextmanager
-async def _lifespan(application):  # type: ignore[no-untyped-def]
+@app.on_event("startup")
+def _startup_sync() -> None:
     sync_all_repos()
-    yield
 
-
-app.router.lifespan_context = _lifespan
 
 if __name__ == "__main__":
     agent_os.serve(

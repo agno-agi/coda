@@ -28,10 +28,10 @@ SECURITY_CASES: list[dict[str, str]] = [
 # ---------------------------------------------------------------------------
 # Tool routing — ReliabilityEval
 # ---------------------------------------------------------------------------
-TOOL_ROUTING_CASES: list[dict[str, list[str]]] = [
-    {"input": ["Where is the authentication middleware?"], "expected_tools": ["grep"]},
-    {"input": ["What repos are available?"], "expected_tools": ["list_repos"]},
-    {"input": ["Show me the recent commits on the main branch"], "expected_tools": ["git_log"]},
-    {"input": ["Who last changed the payment module?"], "expected_tools": ["git_blame"]},
-    {"input": ["What are the open PRs?"], "expected_tools": ["get_pull_requests"]},
+TOOL_ROUTING_CASES: list[dict] = [
+    {"input": "Where is the authentication middleware?", "expected_tools": ["grep"]},
+    {"input": "What repos are available?", "expected_tools": ["list_repos"]},
+    {"input": "Show me the recent commits on the main branch", "expected_tools": ["git_log"]},
+    {"input": "Who last changed the payment module?", "expected_tools": ["git_blame"]},
+    {"input": "What are the open PRs?", "expected_tools": ["get_pull_requests"]},
 ]
