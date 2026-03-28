@@ -1,0 +1,19 @@
+"""
+Shared settings for Coda agents.
+
+Centralizes the database, repos directory, and learnings knowledge base
+so all agents share the same resources.
+"""
+
+from os import getenv
+from pathlib import Path
+
+from db import create_knowledge, get_postgres_db
+
+agent_db = get_postgres_db()
+REPOS_DIR = Path(getenv("REPOS_DIR", str(Path(__file__).parents[1] / "repos")))
+REPOS_DIR.mkdir(exist_ok=True)
+
+# Learnings knowledge base (vector search over learned patterns — NOT code).
+# Created once here, shared by all agents via their own LearningMachine instances.
+coda_learnings = create_knowledge("Coda Learnings", "coda_learnings")

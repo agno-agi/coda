@@ -1,0 +1,6 @@
+chat:
+  quick_prompts:
+    coda:
+      - "What repos are available? Give me a summary of each."
+      - "Walk me through the authentication flow."
+      - "Find all API endpoints that handle file uploads."

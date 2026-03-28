@@ -1,0 +1,60 @@
+services:
+  coda-db:
+    image: agnohq/pgvector:18
+    container_name: coda-db
+    environment:
+      - POSTGRES_USER=${DB_USER:-ai}
+      - POSTGRES_PASSWORD=${DB_PASS:-ai}
+      - POSTGRES_DB=${DB_DATABASE:-ai}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - coda
+
+  coda-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-coda}:${IMAGE_TAG:-latest}
+    container_name: coda-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload: mount source code
+      - .:/app
+      # Persistent repos: where Coda clones repos & creates worktrees
+      - repos:/repos
+    environment:
+      - RUNTIME_ENV=dev
+      - PYTHONPATH=/app
+      # Database
+      - DB_HOST=coda-db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-ai}
+      - DB_PASS=${DB_PASS:-ai}
+      - DB_DATABASE=${DB_DATABASE:-ai}
+      - WAIT_FOR_DB=True
+      # API keys
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      # Slack
+      - SLACK_TOKEN=${SLACK_TOKEN:-}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}
+      # Repos config
+      - REPOS_DIR=/repos
+    depends_on:
+      - coda-db
+    networks:
+      - coda
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  coda:
+
+volumes:
+  pgdata:
+  repos:

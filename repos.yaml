@@ -1,0 +1,13 @@
+# Coda Repository Configuration
+# ==============================
+#
+# Define which repositories Coda should clone and monitor.
+# Each repo is cloned to /repos/<name>/ and synced periodically.
+#
+# Format:
+#   repos:
+#     - url: https://github.com/org/repo-name
+#       branch: main                          # default branch to track
+#       channels: [backend, engineering]      # optional Slack channel hints
+
+repos: []
