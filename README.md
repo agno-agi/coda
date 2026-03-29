@@ -48,7 +48,7 @@ Create an [OpenAI API key](https://platform.openai.com/api-keys) and add it to `
 OPENAI_API_KEY="sk-svcacct-***"
 ```
 
-Create a GitHub Personal Access Token following [GITHUB_ACCESS.md](/GITHUB_ACCESS.md) and add it to `.env`:
+Create a GitHub Personal Access Token following [docs/GITHUB_ACCESS.md](/docs/GITHUB_ACCESS.md) and add it to `.env`:
 
 ```bash
 GITHUB_ACCESS_TOKEN="github_pat_***"
@@ -78,7 +78,7 @@ Confirm Coda is running at [http://localhost:8000/docs](http://localhost:8000/do
 
 ### 5. Connect to Slack
 
-With Coda running, follow [SLACK_CONNECT.md](/SLACK_CONNECT.md) to create your Slack app and connect it. Once connected, add the credentials to `.env`:
+With Coda running, follow [docs/SLACK_CONNECT.md](/docs/SLACK_CONNECT.md) to create your Slack app and connect it. Once connected, add the credentials to `.env`:
 
 ```bash
 SLACK_TOKEN="xoxb-***"
@@ -250,8 +250,8 @@ python -m evals.run_evals --category security
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup guide](GITHUB_ACCESS.md)) |
-| `SLACK_TOKEN` | No | Slack bot token ([setup guide](SLACK_CONNECT.md)) |
+| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup guide](docs/GITHUB_ACCESS.md)) |
+| `SLACK_TOKEN` | No | Slack bot token ([setup guide](docs/SLACK_CONNECT.md)) |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `CODA_MODEL` | No | Model for all agents (default: gpt-5.4) |
 | `DB_HOST` | No | PostgreSQL host (default: localhost) |

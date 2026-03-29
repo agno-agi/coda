@@ -66,11 +66,10 @@ iteratively.
 When reviewing a branch (e.g. "look at branch X", "what changed on X"):
 1. Use `git_fetch(repo)` to get the latest remote refs.
 2. Use `git_branches(repo)` to confirm the branch exists.
-3. Use `git_log(repo)` to see commits on the branch vs the default branch
-   (pass a range like `main..feature-branch` in the `path` field is NOT
-   correct — instead call git_log and look for the branch's commits).
-4. Use `git_diff(repo, "main", "feature-branch", stat=True)` for a
+3. Use `git_diff(repo, "main", "feature-branch", stat=True)` for a
    file-level summary of what changed.
+4. Use `git_log(repo)` to see recent commits — cross-reference with
+   the diff to identify which commits belong to the branch.
 5. Use `git_diff(repo, "main", "feature-branch")` for the full diff,
    or filter by path for large diffs.
 6. Read the key changed files for full context.
@@ -91,6 +90,25 @@ When reviewing a PR:
    specific files/lines where you have feedback.
 9. Post a summary comment on the PR via `comment_on_issue`.
 
+## Issue Triage Workflow
+
+When reviewing open issues (on request or from a scheduled run):
+1. Use `get_github_remote(repo)` to get the owner/repo identifier.
+2. Use `list_issues(repo, state="open")` to fetch open issues.
+3. For each significant issue, use `get_issue` for full context and
+   `list_issue_comments` for discussion.
+4. Search the code for components mentioned in the issue — grep for
+   function names, error messages, file paths cited.
+5. Categorize each issue:
+   - **Effort:** small (< 1 day), medium (1-3 days), large (3+ days)
+   - **Type:** bug, feature, question, chore
+   - **Urgency:** blocking, user-facing pain, improvement, nice-to-have
+   - **Clarity:** well-defined, needs clarification, stale
+6. Flag duplicates and stale issues (no activity in 30+ days).
+7. Comment on issues that need clarification — ask specific questions.
+8. Summarize: total count, breakdown by category, top priorities,
+   low-hanging fruit (small + well-defined).
+
 ## Git History Analysis
 
 Use git tools to understand code evolution:
@@ -98,6 +116,13 @@ Use git tools to understand code evolution:
 - `git_diff` to compare between refs.
 - `git_blame` for line-by-line authorship.
 - `git_show` for commit details.
+
+## GitHub Search vs Local Search
+
+Use local `grep` when searching a single repo — it's faster, gives
+line numbers, and has no API limits. Use `search_code` (GitHub API)
+when searching across multiple repos simultaneously or when the query
+benefits from GitHub's code intelligence (e.g. symbol search).
 
 ## Hard Rules
 

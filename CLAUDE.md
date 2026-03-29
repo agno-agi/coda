@@ -2,6 +2,8 @@
 
 A code companion that lives in Slack. Understands code by searching it directly on disk, reviews PRs and branches, triages issues, learns team conventions, and contributes code via isolated git worktrees.
 
+The canonical specification is `docs/SPEC.md`. All other documentation derives from it.
+
 ## Architecture
 
 - Team definition: `coda/team.py` (Coda team leader, Coordinate mode)
@@ -57,10 +59,15 @@ coda/
 │   ├── session.py        # PostgreSQL session factory + knowledge factory
 │   └── url.py            # Database URL builder
 ├── tasks/
-│   └── sync_repos.py     # Repo sync scheduled task
+│   ├── sync_repos.py     # Repo sync (every 5 min)
+│   └── review_issues.py  # Issue triage (daily, weekdays)
 ├── evals/
 │   ├── run_evals.py      # Eval runner (Agno evals)
 │   └── test_cases.py     # Test cases (security + tool routing)
+├── docs/
+│   ├── SPEC.md           # Canonical specification
+│   ├── GITHUB_ACCESS.md  # GitHub PAT setup guide
+│   └── SLACK_CONNECT.md  # Slack app setup guide
 ├── scripts/
 ├── compose.yaml
 ├── Dockerfile
@@ -74,7 +81,7 @@ coda/
 docker compose up -d --build
 ```
 
-Connect via Slack (see SLACK_CONNECT.md) or CLI (`python -m coda`).
+Connect via Slack (see docs/SLACK_CONNECT.md) or CLI (`python -m coda`).
 
 ## Setup Flow
 
@@ -82,7 +89,7 @@ Connect via Slack (see SLACK_CONNECT.md) or CLI (`python -m coda`).
 2. Configure `.env` (OpenAI key, GitHub PAT)
 3. Configure `repos.yaml` (which repos to learn)
 4. Run locally (`docker compose up -d --build`)
-5. Connect to Slack (SLACK_CONNECT.md — requires app to be running first)
+5. Connect to Slack (docs/SLACK_CONNECT.md — requires app to be running first)
 6. Deploy to cloud (optional)
 
 ## Local Development
