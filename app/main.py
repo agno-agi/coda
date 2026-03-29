@@ -22,7 +22,7 @@ from tasks.sync_repos import sync_all_repos
 # Environment
 # ---------------------------------------------------------------------------
 runtime_env = getenv("RUNTIME_ENV", "prd")
-scheduler_base_url = "http://127.0.0.1:8000" if runtime_env == "dev" else getenv("AGENTOS_URL")
+scheduler_base_url = getenv("AGENTOS_URL", "http://127.0.0.1:8000")
 
 # ---------------------------------------------------------------------------
 # Interfaces
@@ -61,17 +61,17 @@ app = agent_os.get_app()
 
 
 # ---------------------------------------------------------------------------
-# Repo sync (direct endpoint, bypasses the LLM)
+# Repo sync endpoints
 # ---------------------------------------------------------------------------
 @app.post("/sync")
-def sync_repos() -> dict[str, str]:
+async def sync_repos() -> dict[str, str]:
     """Sync all configured repositories (clone missing, pull existing)."""
     sync_all_repos()
     return {"status": "ok"}
 
 
 @app.post("/review-issues")
-def review_issues() -> dict[str, str]:
+async def review_issues() -> dict[str, str]:
     """Return the issue triage prompt for manual triggering.
 
     The scheduler calls ``/teams/coda/runs`` directly.  This endpoint

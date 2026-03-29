@@ -40,7 +40,7 @@ markdown-it-py==4.0.0
 markupsafe==3.0.3
 mdurl==0.1.2
 multidict==6.7.1
-numpy==2.4.3
+numpy==2.4.4
 openai==2.30.0
 openinference-instrumentation==0.1.46
 openinference-instrumentation-agno==0.1.29
@@ -60,7 +60,7 @@ pydantic-core==2.41.5
 pydantic-extra-types==2.11.1
 pydantic-settings==2.13.1
 pygithub==2.9.0
-pygments==2.19.2
+pygments==2.20.0
 pyjwt==2.12.1
 pynacl==1.6.2
 python-dateutil==2.9.0.post0

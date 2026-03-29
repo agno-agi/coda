@@ -91,12 +91,23 @@ Then restart to pick up the Slack credentials:
 docker compose up -d
 ```
 
-Try it out in Slack:
+There are two ways to talk to Coda:
+
+**Direct message** — find Coda under **Apps** in the Slack sidebar and message it directly:
 
 ```
-@Coda hi
-@Coda what repos are available?
+what repos are available?
+walk me through the auth flow
 ```
+
+**In a channel** — invite Coda first, then mention it in any message:
+
+```
+/invite @Coda
+@Coda what are the open PRs?
+```
+
+Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again.
 
 ### 6. Deploy to your cloud provider
 
@@ -108,11 +119,22 @@ railway login
 ./scripts/railway_up.sh
 ```
 
+Once deployed, update your Slack app to point at the new URL:
+
+1. Copy your production URL from the Railway dashboard
+2. Go to your [Slack App settings](https://api.slack.com/apps) → **Event Subscriptions**
+3. Update the Request URL to: `https://your-production-url/slack/events`
+4. Wait for Slack to verify the endpoint
+
+If you were using ngrok for local development, you can stop it now — Slack will route all messages to your deployed instance.
+
+> See `railway.json` to adjust CPU, memory, and replica settings.
+
 ## What Coda Can Do
 
 ### Explore Your Code
 
-Coda searches code directly on disk. It reads actual files, greps through them, and follows the call chain to give you real answers.
+Ask a question in Slack and get an answer grounded in the actual code — with file paths and line numbers. Coda reads files, greps through them, and follows call chains to trace how things connect.
 
 ```
 @Coda where is the webhook handler for Stripe events?
@@ -123,7 +145,7 @@ Coda searches code directly on disk. It reads actual files, greps through them, 
 
 ### Review PRs and Branches
 
-Coda pulls PR details, reads the changed files, diffs them against your conventions, and leaves comments — all from Slack.
+Coda pulls PR details, reads the changed files, diffs them against your conventions, and leaves inline comments — all from Slack.
 
 ```
 @Coda review PR #42
@@ -133,16 +155,17 @@ Coda pulls PR details, reads the changed files, diffs them against your conventi
 
 ### Triage Issues
 
-Coda reads your open issues and understands them in the context of the actual code. On a schedule, it reviews recent issues and posts a summary to Slack — what's urgent, what's low-hanging, and what the code already does nearby.
+Coda reads your open issues and understands them in the context of the actual code. Ask it what's worth working on, or let it tell you — on a schedule, Coda reviews recent issues and posts a summary to your Slack channel: what's urgent, what's low-hanging fruit, and what the codebase already does nearby.
 
 ```
 @Coda what are the open issues?
 @Coda which of these issues can we tackle quickly?
+@Coda review the top 10 open issues and summarize them
 ```
 
 ### Write Code
 
-Coda creates isolated git worktrees, writes code following learned conventions, and opens PRs. Your main branch is never touched.
+When you're ready, Coda writes code in isolated git worktrees and opens PRs. Your main branch is never touched.
 
 ```
 @Coda add rate limiting to /api/v1/users using the same pattern as /orders
@@ -152,7 +175,7 @@ Coda creates isolated git worktrees, writes code following learned conventions, 
 
 ### Learn Over Time
 
-Every interaction feeds Coda's learning system. It picks up naming conventions, error handling patterns, how your team structures services, which abstractions to use and which to avoid. This knowledge is recalled on every future interaction.
+Coda gets sharper the more you use it.
 
 ```
 Week 1:  @Coda add a new endpoint for exporting invoices

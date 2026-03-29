@@ -20,11 +20,7 @@ from tasks.sync_repos import load_repos_config
 def build_issue_review_prompt() -> str:
     """Build the prompt that tells Coda which repos to triage."""
     repos = load_repos_config()
-    repo_names = [
-        url.rstrip("/").split("/")[-1].removesuffix(".git")
-        for r in repos
-        if (url := r.get("url"))
-    ]
+    repo_names = [url.rstrip("/").split("/")[-1].removesuffix(".git") for r in repos if (url := r.get("url"))]
     if not repo_names:
         return "No repos configured in repos.yaml. Nothing to review."
     return (

@@ -30,6 +30,7 @@ services:
     environment:
       - RUNTIME_ENV=dev
       - PYTHONPATH=/app
+      - AGENTOS_URL=http://127.0.0.1:8000
       # Database
       - DB_HOST=coda-db
       - DB_PORT=5432
