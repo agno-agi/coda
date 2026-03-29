@@ -1,60 +1,79 @@
 # Giving Coda Access to GitHub
 
-## What You Need
+Coda needs a GitHub token to clone repos, read issues/PRs, push branches, and open PRs. Without this, most of Coda's capabilities won't work.
 
-A **Fine-grained Personal Access Token** (PAT). This is GitHub's newer, more secure token type that lets you scope access to specific repos with specific permissions.
+## Step 1: Create a Fine-Grained Personal Access Token
 
-Do **not** use a Classic PAT — those grant broad access to everything on your account.
+Go to [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens) and click **Generate new token**.
 
-## Create a Token
+Do **not** use a Classic PAT — those grant broad access to everything on your account. Use the newer Fine-grained token.
 
-1. Go to [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens)
-2. Click **Generate new token**
-3. Configure it:
+Fill in the basics:
 
 | Field | Value |
 |-------|-------|
-| **Token name** | `coda` |
-| **Expiration** | 90 days |
-| **Resource owner** | Your personal account or your org |
-| **Repository access** | **Only select repositories** — pick the repos Coda should work on |
+| Token name | `coda` |
+| Expiration | 90 days (or longer) |
+| Resource owner | Your personal account or your org |
 
-4. Set **Repository permissions**:
+## Step 2: Select Repositories
 
-| Permission | Access | Why |
-|------------|--------|-----|
-| **Contents** | Read and write | Clone repos, push `coda/*` branches |
-| **Pull requests** | Read and write | Read PRs for review, create PRs for code changes |
-| **Issues** | Read and write | Read issues for triage, post comments |
-| **Metadata** | Read-only (required) | List repos, basic API access |
+Under **Repository access**, choose **Only select repositories** and pick every repo you want Coda to work on.
 
-These are the minimum permissions. Coda will not work correctly without all four.
+Coda can only see and interact with repos you explicitly grant here. If you add a repo to `repos.yaml` but don't include it in the token, Coda won't be able to clone it, read its issues, or push code.
 
-5. Click **Generate token** and copy it immediately — GitHub only shows it once.
+## Step 3: Set Permissions
 
-## Add to Coda
+Click **Repository permissions** and set these four:
 
-Add the token to your `.env` file:
+| Permission | Access | What breaks without it |
+|------------|--------|------------------------|
+| **Contents** | Read and write | Can't clone repos or push `coda/*` branches |
+| **Pull requests** | Read and write | Can't review PRs or create new ones |
+| **Issues** | Read and write | Can't read issues for triage or post comments |
+| **Metadata** | Read-only (required) | Can't list repos or make any API calls |
 
-```bash
-GITHUB_ACCESS_TOKEN="github_pat_***"
+All four are required. If any are missing, Coda will fail silently or return permission errors when trying to use the affected feature.
+
+## Step 4: Generate and Save
+
+Click **Generate token**. GitHub only shows the token once — copy it immediately.
+
+Add it to your `.env` file:
+
+```
+GITHUB_ACCESS_TOKEN=github_pat_***
 ```
 
-The `compose.yaml` passes this into the container. Coda never sees the raw token — authentication happens transparently via a git credential helper.
+No quotes needed. Then restart the container:
+
+```bash
+docker compose up -d
+```
+
+## Troubleshooting
+
+**"Permission to repo.git denied" or 403 errors:**
+- The token doesn't have **Contents: Read and write** for that repo
+- Or the repo isn't in the token's "Only select repositories" list
+
+**"Resource not accessible by personal access token":**
+- The token is missing **Pull requests: Read and write** (for PR operations)
+- Or missing **Issues: Read and write** (for issue operations)
+
+**Coda can read but can't push or create PRs:**
+- Permissions are set to Read-only instead of Read and write
+- Check the token settings and update to Read and write
+
+**Token expired:**
+1. Generate a new one with the same settings
+2. Update `.env` with the new value
+3. Restart: `docker compose up -d`
 
 ## How It Works Inside the Container
 
-The Dockerfile sets up a credential helper that reads `$GITHUB_ACCESS_TOKEN` from the environment when git needs to authenticate. The token is never written to disk.
+The Dockerfile sets up a git credential helper that reads `GITHUB_ACCESS_TOKEN` from the environment. The token is never written to disk.
 
-This means:
 - Coda uses `git clone https://github.com/...` (not SSH, not token-in-URL)
 - The token is injected at the Docker layer, not in agent instructions
-- No risk of the agent accidentally leaking the token in a commit or output
-
-## Rotating Tokens
-
-When a token expires:
-
-1. Generate a new one with the same settings
-2. Update `.env` with the new value
-3. Restart the container: `docker compose up -d`
+- No risk of the agent accidentally leaking the token in output
