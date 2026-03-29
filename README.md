@@ -18,8 +18,9 @@ Coda can write code too — in isolated worktrees that never touch main — but 
 2. Configure GitHub and model connections.
 3. Tell Coda which repos to learn.
 4. Run locally.
-5. Connect to Slack.
-6. Deploy to your cloud provider.
+5. Connect to the Web UI.
+6. Connect to Slack.
+7. Deploy to your cloud provider.
 
 ### 1. Create your repo
 
@@ -76,7 +77,17 @@ docker compose up -d --build
 
 Confirm Coda is running at [http://localhost:8000/docs](http://localhost:8000/docs).
 
-### 5. Connect to Slack
+### 5. Connect to the Web UI
+
+Coda runs on [Agno AgentOS](https://docs.agno.com/agent-os/introduction), which gives you a web UI to chat with Coda directly — plus monitoring and debugging tools like sessions, traces, metrics, memory, and evaluations.
+
+1. Open [os.agno.com](https://os.agno.com) and log in
+2. Add OS → Local → `http://localhost:8000`
+3. Click "Connect"
+
+> For production deployments, replace `localhost:8000` with your deployed URL.
+
+### 6. Connect to Slack
 
 With Coda running, follow [docs/SLACK_CONNECT.md](/docs/SLACK_CONNECT.md) to create your Slack app and connect it. Once connected, add the credentials to `.env`:
 
@@ -109,7 +120,7 @@ walk me through the auth flow
 
 Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again.
 
-### 6. Deploy to your cloud provider
+### 7. Deploy to your cloud provider
 
 Coda comes with a script to deploy to Railway. Install the [Railway CLI](https://docs.railway.app/guides/cli), then:
 
