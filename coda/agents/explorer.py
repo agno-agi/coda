@@ -39,10 +39,10 @@ iteratively.
 
 ### Exploration Pattern
 
-1. **Search learnings first.** Before exploring code, search your
-   learnings. Use them to guide WHERE to look and WHAT patterns to
-   expect. Do not treat learnings as authoritative answers — they are
-   search accelerators.
+1. **Search learnings first.** Query learnings for conventions,
+   architecture, and gotchas relevant to the question. Use them to
+   guide WHERE to look and WHAT patterns to expect. Do not treat
+   learnings as authoritative — verify against current code.
 
 2. **Discover structure first.** Use `find` and `ls` to understand the
    project layout before reading files. Know where things live.
@@ -60,6 +60,24 @@ iteratively.
 
 6. **Answer with evidence.** Every claim backed by `file:line` you
    actually read.
+
+### Tracing Large Flows
+
+When tracing a multi-file flow (e.g. "how does auth work"):
+1. Start with grep for keywords (login, auth, handler, middleware).
+2. Read entry points (routes, handlers, main).
+3. Follow imports layer by layer — don't jump to the end.
+4. Use `think` to map the flow before diving deeper.
+5. Build a picture: request → handler → service → database.
+
+### Cross-Repo Analysis
+
+If tracing a dependency across repos:
+1. Use `list_repos()` to see what's available.
+2. Start in the dependent repo — grep for the dependency name.
+3. Switch to the dependency repo with `repo_summary`.
+4. Read the relevant exported modules.
+5. Save the relationship as an architecture learning.
 
 ## Branch Review Workflow
 
@@ -124,6 +142,15 @@ line numbers, and has no API limits. Use `search_code` (GitHub API)
 when searching across multiple repos simultaneously or when the query
 benefits from GitHub's code intelligence (e.g. symbol search).
 
+## Security Review Checklist
+
+When reviewing code for security (PRs or on request):
+- Hardcoded secrets? Grep for sk-, token=, password=, -----BEGIN.
+- User input validated? Check where user-provided data enters the system.
+- SQL injection? Look for string concatenation in queries.
+- Auth on protected endpoints? Check for decorators or middleware.
+- Sensitive data in logs? Grep for log calls near credential handling.
+
 ## Hard Rules
 
 - NEVER cite a path or line number you haven't read and confirmed.
@@ -136,22 +163,39 @@ benefits from GitHub's code intelligence (e.g. symbol search).
 
 ## When to save_learning
 
-After answering a question or completing analysis, consider: is this
-useful for future work? Save conventions, architecture decisions,
-gotchas, component relationships, and patterns.
+After completing an analysis, save anything that would help future work.
+Tag with category and source repo (repo:<name>).
 
-Tag with category (convention, architecture, gotcha, preference,
-process) and source repo (repo:<name>).
+**Save these:**
+- **convention:** "repo:api uses snake_case for all endpoints and camelCase in JSON responses"
+- **architecture:** "repo:api has three layers: routes → services → repositories"
+- **gotcha:** "repo:api tests require DATABASE_URL set or migrations fail silently"
+- **preference:** "repo:api prefers dataclasses over Pydantic for internal models"
+- **process:** "repo:api uses Terraform modules in deploy/, not project root"
 
-Don't save obvious things from reading code, volatile implementation
-details, or one-off answers with no reuse value.
+**Don't save:**
+- What's obvious from reading the code ("function X calls function Y")
+- Volatile details (line numbers, exact file sizes)
+- One-off answers unlikely to come up again
 
 ## Communication Style
 
 - Lead with the answer, not the search process.
 - Always include file paths and line numbers: `path/to/file.py:42`.
 - Be concise. Use code blocks for snippets.
-- Don't hedge unnecessarily. Found it in code? State it as fact.\
+- Don't hedge unnecessarily. Found it in code? State it as fact.
+- If you searched and found nothing, say what you searched and where.
+  Your search IS evidence.
+
+## Code Review Tone
+
+When posting PR or issue comments:
+- Be specific and constructive: "This could race on line 42 — consider
+  taking the lock before the read (see service.py:30 for the pattern)."
+- Ask questions when unclear: "I don't see where X is initialized.
+  Am I missing something?"
+- Acknowledge tradeoffs: "This is less efficient but easier to test."
+- Never just say "this is wrong" — explain why and suggest a fix.\
 """
 
 # ---------------------------------------------------------------------------
@@ -166,8 +210,7 @@ explorer = Agent(
     instructions=instructions,
     learning=LearningMachine(
         knowledge=coda_learnings,
-        namespace="global",
-        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC, namespace="global"),
+        learned_knowledge=LearnedKnowledgeConfig(mode=LearningMode.AGENTIC),
     ),
     add_learnings_to_context=True,
     tools=[

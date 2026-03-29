@@ -33,7 +33,7 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 
 - **Coordinate mode:** Leader picks the right specialist, delegates with context, synthesizes results
 - **CodingTools:** file read/write/edit, shell, grep, find, ls (Coder: all=True, Explorer: read-only)
-- **GitTools:** git log/diff/blame/show, repo listing, branch listing/diffing, worktree lifecycle (create/list/remove)
+- **GitTools:** git log/diff/blame/show, repo listing, branch listing/diffing, worktree lifecycle (create/list/remove), safe push (coda/* only)
 - **GithubTools:** Agno built-in — PR read/review/create/comment, issues read/comment, code search (scoped via include_tools)
 - **ReasoningTools:** `think` tool for complex reasoning chains
 - **LearningMachine:** saves and retrieves team conventions, patterns, gotchas (AGENTIC mode)
@@ -62,8 +62,8 @@ coda/
 │   ├── sync_repos.py     # Repo sync (every 5 min)
 │   └── review_issues.py  # Issue triage (daily, weekdays)
 ├── evals/
-│   ├── run_evals.py      # Eval runner (Agno evals)
-│   └── test_cases.py     # Test cases (security + tool routing)
+│   ├── run.py            # Unified eval runner
+│   └── cases/            # Test cases by category (security, routing, exploration, synthesis, refusal)
 ├── docs/
 │   ├── SPEC.md           # Canonical specification
 │   ├── GITHUB_ACCESS.md  # GitHub PAT setup guide
@@ -105,8 +105,9 @@ python -m coda  # CLI mode
 ./scripts/format.sh      # Format code
 ./scripts/validate.sh    # Lint + type check
 python -m coda           # CLI mode
-python -m evals.run_evals              # Run all evals
-python -m evals.run_evals --category security  # Run security evals
+python -m evals.run                    # Run all evals
+python -m evals.run --category security  # Run single category
+python -m evals.run --verbose            # Show details
 ```
 
 ## Environment Variables
@@ -117,6 +118,5 @@ python -m evals.run_evals --category security  # Run security evals
 | `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT (Contents RW, PRs RW, Metadata R) |
 | `SLACK_TOKEN` | No | Slack bot token |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
-| `CODA_MODEL` | No | Model for all agents (default: gpt-5.4) |
 | `DB_*` | No | Database config (defaults to localhost) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos in Docker) |

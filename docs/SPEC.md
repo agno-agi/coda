@@ -1,10 +1,6 @@
 # Coda Specification
 
-This is the canonical specification for Coda. All other documentation (README, CLAUDE.md, agent instructions) is derived from this file.
-
-## What Coda Is
-
-A code companion that lives in Slack. Helps engineering teams understand their code, review changes, triage issues, and contribute code that fits their style. Built on [Agno](https://github.com/agno-agi/agno).
+Coda is a code companion that lives in Slack. Helps engineering teams understand their code, review changes, triage issues, and contribute code that fits their style. Built on [Agno](https://github.com/agno-agi/agno).
 
 ## Architecture
 
@@ -14,7 +10,7 @@ A code companion that lives in Slack. Helps engineering teams understand their c
 Coda (Team leader, Coordinate mode, gpt-5.4)
 ├── Coder — writes code in isolated worktrees, opens PRs
 ├── Explorer — searches code, reviews PRs/branches, triages issues (read-only)
-└── Leader responds directly for greetings and simple questions
+└── Leader responds directly for simple questions
 ```
 
 ### Infrastructure
@@ -68,7 +64,7 @@ Read open issues, understand them in context of the code, prioritize.
 Build features, fix bugs, write tests in isolated git worktrees.
 
 - **Tools:** CodingTools (full), GitTools (full), GithubTools (create_pull_request), ReasoningTools
-- **Workflow:** create worktree → read first → plan → edit → verify (run tests) → commit → push → open PR
+- **Workflow:** explore on main clone → create worktree → plan → edit → verify (run tests) → commit → push (via git_push) → open PR → check CI
 - Never touches main. Each task gets a `coda/<task-name>` branch.
 
 ### 6. Learn Over Time (All agents)
@@ -112,7 +108,7 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 - **Role:** Write, test, and ship code in isolated git worktrees
 - **Tools:**
   - CodingTools (all=True, shell_timeout=120)
-  - GitTools (full — includes create_worktree, remove_worktree)
+  - GitTools (full — includes create_worktree, remove_worktree, git_push)
   - GithubTools (get_pull_request, get_pull_requests, get_pull_request_changes, get_pull_request_comments, create_pull_request, get_issue, list_issues, create_issue, comment_on_issue)
   - ReasoningTools (think)
 
@@ -123,7 +119,7 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 Custom Agno Toolkit wrapping git CLI operations:
 
 - **Read-only:** git_log, git_diff, git_blame, git_show, git_fetch, git_branches, list_repos, repo_summary, get_github_remote, list_worktrees
-- **Write (Coder only):** create_worktree, remove_worktree
+- **Write (Coder only):** create_worktree, remove_worktree, git_push
 - All paths validated to stay within `base_dir` (`/repos`)
 - Diff output truncated at 20,000 chars
 
@@ -177,8 +173,8 @@ coda/
 │   ├── sync_repos.py    # Repo sync (every 5 min)
 │   └── review_issues.py # Issue triage (daily, weekdays)
 ├── evals/
-│   ├── run_evals.py     # Eval runner
-│   └── test_cases.py    # Test cases
+│   ├── run.py           # Unified eval runner
+│   └── cases/           # Test cases by category
 ├── docs/
 │   ├── SPEC.md          # This file (canonical spec)
 │   ├── GITHUB_ACCESS.md # GitHub PAT setup guide

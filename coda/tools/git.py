@@ -32,7 +32,7 @@ class GitTools(Toolkit):
             self.list_worktrees,
         ]
         if not read_only:
-            tools += [self.create_worktree, self.remove_worktree]
+            tools += [self.create_worktree, self.remove_worktree, self.git_push]
         super().__init__(name="git_tools", tools=tools)
         self.base_dir = Path(base_dir)
 
@@ -353,6 +353,44 @@ class GitTools(Toolkit):
             return match.group(1)
         except Exception as e:
             logger.warning(f"get_github_remote failed: {e}")
+            return f"Error: {e}"
+
+    def git_push(self, repo: str, branch: str = "") -> str:
+        """Push a branch to origin.
+
+        Only allows pushing ``coda/*`` branches. Force-push is never used.
+
+        Args:
+            repo: Repository name.
+            branch: Branch name to push. If empty, pushes the current branch.
+
+        Returns:
+            Success confirmation or an error message.
+        """
+        try:
+            repo_path = self._repo_path(repo)
+
+            # Resolve branch name if not provided
+            if not branch:
+                result = self._run(["git", "branch", "--show-current"], cwd=repo_path)
+                branch = result.stdout.strip()
+                if not branch:
+                    return "Error: could not determine current branch (detached HEAD?)"
+
+            # Safety: only push coda/* branches
+            if not branch.startswith("coda/"):
+                return f"Error: refusing to push branch '{branch}'. Only coda/* branches can be pushed."
+
+            result = self._run(
+                ["git", "push", "-u", "origin", branch],
+                cwd=repo_path,
+                timeout=120,
+            )
+            if result.returncode != 0:
+                return f"Error pushing: {result.stderr.strip()}"
+            return f"Pushed {branch} to origin."
+        except Exception as e:
+            logger.warning(f"git_push failed: {e}")
             return f"Error: {e}"
 
     def create_worktree(
