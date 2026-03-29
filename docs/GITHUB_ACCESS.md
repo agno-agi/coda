@@ -19,7 +19,18 @@ Do **not** use a Classic PAT — those grant broad access to everything on your 
 | **Resource owner** | Your personal account or your org |
 | **Repository access** | **Only select repositories** — pick the repos Coda should work on |
 
-Click **Generate token** and copy it immediately — GitHub only shows it once.
+4. Set **Repository permissions**:
+
+| Permission | Access | Why |
+|------------|--------|-----|
+| **Contents** | Read and write | Clone repos, push `coda/*` branches |
+| **Pull requests** | Read and write | Read PRs for review, create PRs for code changes |
+| **Issues** | Read and write | Read issues for triage, post comments |
+| **Metadata** | Read-only (required) | List repos, basic API access |
+
+These are the minimum permissions. Coda will not work correctly without all four.
+
+5. Click **Generate token** and copy it immediately — GitHub only shows it once.
 
 ## Add to Coda
 
