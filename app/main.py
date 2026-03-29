@@ -16,7 +16,7 @@ from agno.os import AgentOS
 
 from coda.team import coda
 from db import get_postgres_db
-from tasks.review_issues import build_issue_review_prompt
+from tasks.review_issues import run_daily_triage
 from tasks.sync_repos import sync_all_repos
 
 # ---------------------------------------------------------------------------
@@ -82,15 +82,11 @@ async def sync_repos() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/review-issues")
-async def review_issues() -> dict[str, str]:
-    """Return the issue triage prompt for manual triggering.
-
-    The scheduler calls ``/teams/coda/runs`` directly.  This endpoint
-    is a convenience for testing — it returns the prompt that would be
-    sent so you can verify repos.yaml is parsed correctly.
-    """
-    return {"prompt": build_issue_review_prompt()}
+@app.post("/triage-issues")
+async def triage_issues() -> dict[str, str]:
+    """Run daily issue triage — fetch, classify, post to Slack."""
+    run_daily_triage()
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
