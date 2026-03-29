@@ -1,16 +1,25 @@
 # Coda
 
-A multi-agent team that learns your codebase and lives in Slack.
+A code companion that lives in Slack.
 
-Ask Coda about your code and get answers grounded in what's actually on disk. It traces call chains, maps dependencies, explains architecture decisions, and learns your team's conventions over time. When you're ready, it writes code in isolated worktrees following the patterns it's learned.
+Coding agents help us write code faster, but most engineering work isn't writing code. It's understanding how things work, reviewing PRs, figuring out what broke and why, triaging the backlog, and deciding what's safe to change. That work happens in Slack and GitHub, not in an editor.
+
+Coda fills that gap. It answers architecture questions like "how does auth work" or "where is the model API call". It reviews PRs and open branches, diffs them against your conventions, and leaves comments. It reads open issues and flags the urgent ones worth tackling next.
+
+Most importantly, Coda lives in Slack and works alongside your team.
+
+Coda also learns and improves with use. It picks up your coding standards, conventions, and patterns. Over time it stops waiting to be asked — it reviews open issues on a schedule, flags low-hanging fruit, and proposes changes. It shows up in your Slack channel with a summary: here's what's worth tackling, here's why, here's how the code already handles similar cases.
+
+Coda can write code too — in isolated worktrees that never touch main — but that's not its main job. Coda is the teammate who knows what's going on in the codebase, and is always available to talk about it.
 
 ## Get Started
 
-To get Coda up and running:
-
 1. Create your Coda repo from this template.
-2. Configure Slack, GitHub, and model provider.
-3. Run locally or deploy to your cloud.
+2. Configure GitHub and model connections.
+3. Tell Coda which repos to learn.
+4. Run locally.
+5. Connect to Slack.
+6. Deploy to your cloud provider.
 
 ### 1. Create your repo
 
@@ -21,50 +30,85 @@ git clone https://github.com/your-org/coda.git && cd coda
 ```
 
 Or clone directly:
-
 ```bash
-git clone --depth 1 https://github.com/agno-agi/coda.git && cd coda
-git remote remove origin
+git clone https://github.com/agno-agi/coda.git && cd coda
 ```
 
-### 2. Configure Slack, GitHub and model provider
+### 2. Configure GitHub and model connections
+
+Copy the example environment file:
 
 ```bash
 cp example.env .env
-# Edit .env: add OPENAI_API_KEY and GITHUB_ACCESS_TOKEN
-
-cp example.repos.yaml repos.yaml
-# Edit repos.yaml: add the repositories Coda should learn
 ```
 
-Example `repos.yaml`
+Create an [OpenAI API key](https://platform.openai.com/api-keys) and add it to `.env`:
+
+```bash
+OPENAI_API_KEY="sk-svcacct-***"
+```
+
+Create a GitHub Personal Access Token following [GITHUB_ACCESS.md](/GITHUB_ACCESS.md) and add it to `.env`:
+
+```bash
+GITHUB_ACCESS_TOKEN="github_pat_***"
+```
+
+### 3. Tell Coda which repos to learn
+
+Edit `repos.yaml` and add your repositories:
 
 ```yaml
 repos:
-  - url: https://github.com/agno-agi/agno
+  - url: https://github.com/your-org/your-repo
     branch: main
 ```
 
-### 3a. Run Coda locally
+> Author's note: I recommend just using the agno repo as a starting point, so you have some test questions you can play around with.
+
+### 4. Run locally
+
+> Make sure Docker Desktop is installed and running.
 
 ```bash
 docker compose up -d --build
-
-# Confirm Coda is running
-open http://localhost:8000/docs
 ```
 
-### 3b. Run Coda on Railway
+Confirm Coda is running at [http://localhost:8000/docs](http://localhost:8000/docs).
 
-```sh
+### 5. Connect to Slack
+
+With Coda running, follow [SLACK_CONNECT.md](/SLACK_CONNECT.md) to create your Slack app and connect it. Once connected, add the credentials to `.env`:
+
+```bash
+SLACK_TOKEN="xoxb-***"
+SLACK_SIGNING_SECRET="***"
+```
+
+Then restart to pick up the Slack credentials:
+
+```bash
+docker compose up -d
+```
+
+Try it out in Slack:
+
+```
+@Coda hi
+@Coda what repos are available?
+```
+
+### 6. Deploy to your cloud provider
+
+Coda comes with a script to deploy to Railway. Install the [Railway CLI](https://docs.railway.app/guides/cli), then:
+
+```bash
 railway login
 
 ./scripts/railway_up.sh
 ```
 
 ## What Coda Can Do
-
-Coda earns trust progressively. You start by asking questions. Then you let it write code. Over time, it learns your patterns and its contributions get sharper.
 
 ### Explore Your Code
 
@@ -75,6 +119,25 @@ Coda searches code directly on disk. It reads actual files, greps through them, 
 @Coda walk me through the signup flow
 @Coda find all API endpoints that accept file uploads
 @Coda what breaks if I change get_customer()?
+```
+
+### Review PRs and Branches
+
+Coda pulls PR details, reads the changed files, diffs them against your conventions, and leaves comments — all from Slack.
+
+```
+@Coda review PR #42
+@Coda what changed on the feature/payments branch?
+@Coda compare this branch against main
+```
+
+### Triage Issues
+
+Coda reads your open issues and understands them in the context of the actual code. On a schedule, it reviews recent issues and posts a summary to Slack — what's urgent, what's low-hanging, and what the code already does nearby.
+
+```
+@Coda what are the open issues?
+@Coda which of these issues can we tackle quickly?
 ```
 
 ### Write Code
@@ -89,11 +152,7 @@ Coda creates isolated git worktrees, writes code following learned conventions, 
 
 ### Learn Over Time
 
-Coda is useful immediately for code exploration. Its code contributions improve as it learns your team's patterns.
-
-Every interaction feeds Coda's learning system. It persists what it learns about your codebase: naming conventions, error handling patterns, how your team structures services, which abstractions to use and which to avoid. This knowledge is stored as structured conventions and recalled on every future interaction.
-
-The result is compound improvement. The Coda that writes code in week four understands your codebase in a way that week-one Coda couldn't. It stops suggesting patterns your team has moved away from. It picks up on the way you name things, the way you handle errors, the way you organize modules.
+Every interaction feeds Coda's learning system. It picks up naming conventions, error handling patterns, how your team structures services, which abstractions to use and which to avoid. This knowledge is recalled on every future interaction.
 
 ```
 Week 1:  @Coda add a new endpoint for exporting invoices
@@ -109,12 +168,9 @@ Coda's learning is powered by [Agno's Learning Machines](https://docs.agno.com/l
 
 ## What Coda Doesn't Do
 
-Transparency builds trust. Here's what Coda won't do:
-
 - **Auto-merge.** Coda opens PRs. A human merges them.
 - **Touch your main branch.** All code work happens in isolated worktrees.
 - **Send code outside your environment.** Coda runs in your infrastructure. Your code stays on your machines. The only external calls are to your configured LLM provider.
-- **Hallucinate file paths.** Coda reads real files on disk. If it can't find something, it says so.
 
 ## Architecture
 
@@ -135,17 +191,12 @@ Slack → Coda (Team Leader, TasksMode)
         └─ Agentic Memory (user context, leader only)
 ```
 
-## Connect to Slack
-
-Coda works standalone via CLI, but it's designed to live in Slack where your team already asks questions.
-
-See [SLACK_CONNECT.md](SLACK_CONNECT.md) for the full setup guide — creating the Slack app, configuring scopes and events, and connecting it to Coda.
-
 ## Local Development
 
 ```bash
-# Setup
-./scripts/venv_setup.sh && source .venv/bin/activate
+# Create and activate virtual environment
+./scripts/venv_setup.sh
+source .venv/bin/activate
 
 # Start database
 docker compose up -d coda-db

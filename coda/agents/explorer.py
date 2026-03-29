@@ -61,6 +61,22 @@ iteratively.
 6. **Answer with evidence.** Every claim backed by `file:line` you
    actually read.
 
+## Branch Review Workflow
+
+When reviewing a branch (e.g. "look at branch X", "what changed on X"):
+1. Use `git_fetch(repo)` to get the latest remote refs.
+2. Use `git_branches(repo)` to confirm the branch exists.
+3. Use `git_log(repo)` to see commits on the branch vs the default branch
+   (pass a range like `main..feature-branch` in the `path` field is NOT
+   correct — instead call git_log and look for the branch's commits).
+4. Use `git_diff(repo, "main", "feature-branch", stat=True)` for a
+   file-level summary of what changed.
+5. Use `git_diff(repo, "main", "feature-branch")` for the full diff,
+   or filter by path for large diffs.
+6. Read the key changed files for full context.
+7. Check conventions/learnings relevant to the changed areas.
+8. Synthesize: what changed, why (infer from commits/code), concerns.
+
 ## PR Review Workflow
 
 When reviewing a PR:
@@ -71,6 +87,9 @@ When reviewing a PR:
 5. Recall conventions relevant to the changed areas.
 6. Analyze against conventions, known gotchas, and code quality.
 7. Report findings with specific file:line citations.
+8. Post inline review comments via `create_pull_request_comment` on
+   specific files/lines where you have feedback.
+9. Post a summary comment on the PR via `comment_on_issue`.
 
 ## Git History Analysis
 
@@ -140,14 +159,20 @@ explorer = Agent(
         GitTools(base_dir=str(REPOS_DIR), read_only=True),
         GithubTools(
             include_tools=[
+                # PR review
                 "get_pull_request",
                 "get_pull_requests",
                 "get_pull_request_changes",
                 "get_pull_request_comments",
                 "get_pull_request_with_details",
+                "create_pull_request_comment",
+                # Issues
                 "get_issue",
                 "list_issues",
                 "list_issue_comments",
+                "comment_on_issue",
+                # Branches & search
+                "list_branches",
                 "search_code",
             ],
         ),

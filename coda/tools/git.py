@@ -24,6 +24,8 @@ class GitTools(Toolkit):
             self.git_diff,
             self.git_blame,
             self.git_show,
+            self.git_fetch,
+            self.git_branches,
             self.list_repos,
             self.repo_summary,
             self.get_github_remote,
@@ -104,29 +106,42 @@ class GitTools(Toolkit):
         ref1: str,
         ref2: str = "HEAD",
         path: str = "",
+        stat: bool = False,
     ) -> str:
         """Show the diff between two git refs.
 
+        Supports branch ranges like ``main..feature-branch`` in *ref1*
+        (leave *ref2* empty) or as separate args.
+
         Args:
             repo: Repository name.
-            ref1: Starting ref (commit, branch, or tag).
-            ref2: Ending ref (default HEAD).
+            ref1: Starting ref (commit, branch, or tag). Can also be a range
+                like ``main..feature-branch``.
+            ref2: Ending ref (default HEAD). Ignored when *ref1* contains ``..``.
             path: Optional file path to restrict the diff.
+            stat: If True, return a ``--stat`` summary instead of the full diff.
+                Useful for getting a file-level overview of large changes.
 
         Returns:
-            Unified diff output (truncated to 5000 chars), or an error message.
+            Diff output (truncated to 20 000 chars), or an error message.
         """
         try:
             repo_path = self._repo_path(repo)
-            cmd = ["git", "diff", f"{ref1}..{ref2}"]
+            # Allow ref1 to carry a full range (e.g. "main..feature")
+            if ".." in ref1:
+                cmd = ["git", "diff", ref1]
+            else:
+                cmd = ["git", "diff", f"{ref1}..{ref2}"]
+            if stat:
+                cmd.append("--stat")
             if path:
                 cmd += ["--", path]
             result = self._run(cmd, cwd=repo_path)
             if result.returncode != 0:
                 return f"Error: {result.stderr.strip()}"
             output = result.stdout.strip()
-            if len(output) > 5000:
-                return output[:5000] + "\n\n... [truncated — diff exceeds 5000 chars]"
+            if len(output) > 20000:
+                return output[:20000] + "\n\n... [truncated — diff exceeds 20 000 chars]"
             return output or "(no diff)"
         except Exception as e:
             logger.warning(f"git_diff failed: {e}")
@@ -182,6 +197,52 @@ class GitTools(Toolkit):
             return result.stdout.strip() or "(no output)"
         except Exception as e:
             logger.warning(f"git_show failed: {e}")
+            return f"Error: {e}"
+
+    def git_fetch(self, repo: str) -> str:
+        """Fetch the latest refs from origin.
+
+        Downloads all remote branches and tags without modifying the working
+        tree. This is a read-only network operation — safe to call at any time.
+
+        Args:
+            repo: Repository name.
+
+        Returns:
+            Success confirmation or an error message.
+        """
+        try:
+            repo_path = self._repo_path(repo)
+            result = self._run(["git", "fetch", "origin"], cwd=repo_path, timeout=120)
+            if result.returncode != 0:
+                return f"Error: {result.stderr.strip()}"
+            return "Fetched latest refs from origin."
+        except Exception as e:
+            logger.warning(f"git_fetch failed: {e}")
+            return f"Error: {e}"
+
+    def git_branches(self, repo: str, remote: bool = True) -> str:
+        """List branches in a repository.
+
+        Args:
+            repo: Repository name.
+            remote: If True (default), include remote tracking branches
+                (``origin/*``). If False, list only local branches.
+
+        Returns:
+            Formatted branch list, or an error message.
+        """
+        try:
+            repo_path = self._repo_path(repo)
+            cmd = ["git", "branch"]
+            if remote:
+                cmd.append("-a")
+            result = self._run(cmd, cwd=repo_path)
+            if result.returncode != 0:
+                return f"Error: {result.stderr.strip()}"
+            return result.stdout.strip() or "(no branches)"
+        except Exception as e:
+            logger.warning(f"git_branches failed: {e}")
             return f"Error: {e}"
 
     def list_repos(self) -> str:

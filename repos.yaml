@@ -4,18 +4,11 @@
 # Define which repositories Coda should clone and monitor.
 # Each repo is cloned to /repos/<name>/ and synced periodically.
 #
-# Quick start:
-#   cp example.repos.yaml repos.yaml
-#
 # Format:
 #   repos:
 #     - url: https://github.com/org/repo-name
 #       branch: main                          # default branch to track
-#       channels: [backend, engineering]      # optional: Slack channels this repo is relevant to
-#
-# Example:
-#   repos:
-#     - url: https://github.com/agno-agi/agno
-#       branch: main
 
-repos: []
+repos:
+  - url: https://github.com/agno-agi/agno
+    branch: main

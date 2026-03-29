@@ -1,27 +1,20 @@
 [project]
 name = "coda"
 version = "1.0.0"
-description = "A codebase agent that learns your code and lives in Slack"
+description = "A code companion that lives in Slack."
 requires-python = ">=3.12,<4"
 readme = "README.md"
 license-files = ["LICENSE"]
 authors = [{ name = "Agno", email = "hello@agno.com" }]
 
 dependencies = [
-    "agno",
+    "agno[os]",
     "aiohttp",
-    "fastapi[standard]",
-    "httpx",
     "openai",
     "pgvector",
     "psycopg[binary]",
     "PyGithub",
     "slack-sdk",
-    "sqlalchemy",
-    "opentelemetry-api",
-    "opentelemetry-sdk",
-    "openinference-instrumentation-agno",
-    "pyyaml",
 ]
 
 [project.optional-dependencies]
