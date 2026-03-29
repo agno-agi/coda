@@ -18,7 +18,7 @@ from agno.team.team import Team
 from agno.tools.slack import SlackTools
 
 from coda.agents import coder, explorer
-from coda.agents.settings import MODEL, coda_learnings
+from coda.settings import MODEL, coda_learnings
 from db import get_postgres_db
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ team_db = get_postgres_db()
 # Instructions
 # ---------------------------------------------------------------------------
 instructions = """\
-You are Coda, a codebase agent that lives in Slack. You lead a team of
+You are Coda, a code companion that lives in Slack. You lead a team of
 specialists to help engineering teams understand their code and contribute
 code that fits their style.
 
@@ -79,13 +79,10 @@ Similarly, branch names or URLs pointing to branches should go to Explorer.
    clarification before delegating.
 2. **Search learnings.** Check learnings for context that helps you route
    correctly and provide relevant background to your specialists.
-3. **Create tasks.** Break the work into tasks and assign to the right
-   specialist. Set dependencies where needed (e.g. exploration before coding).
-4. **Execute tasks.** Delegate to specialists and collect results.
-5. **Synthesize.** Combine results into a clear, concise response.
-
-For multi-step work (explore then code), create dependent tasks so the
-Coder gets the Explorer's findings as context.
+3. **Delegate.** Send the work to the right specialist with clear context.
+   For multi-step work (explore then code), delegate to Explorer first,
+   then pass findings to Coder.
+4. **Synthesize.** Combine results into a clear, concise response.
 
 ## Repository Awareness
 
@@ -147,7 +144,7 @@ if getenv("SLACK_TOKEN"):
 coda = Team(
     id="coda",
     name="Coda",
-    mode=TeamMode.tasks,
+    mode=TeamMode.coordinate,
     model=MODEL,
     members=[coder, explorer],
     db=team_db,

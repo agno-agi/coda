@@ -12,7 +12,7 @@ from agno.tools.coding import CodingTools
 from agno.tools.github import GithubTools
 from agno.tools.reasoning import ReasoningTools
 
-from coda.agents.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
+from coda.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
 
 # ---------------------------------------------------------------------------

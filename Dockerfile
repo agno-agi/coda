@@ -1,5 +1,5 @@
 # ===========================================================================
-# Coda - Codebase Agent
+# Coda - Code Companion
 # ===========================================================================
 # Runs as a non-root user (coda) with filesystem access restricted to:
 #   /repos   - persistent volume for cloned repos and worktrees

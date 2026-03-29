@@ -27,6 +27,6 @@ aienv*
 .ipynb_checkpoints
 
 # Workspace & temp
-coda/workspace/
+repos/
 tmp/
 .claude/

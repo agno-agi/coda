@@ -60,7 +60,7 @@ Thumbs.db
 # =========================
 tmp
 .claude
-coda/workspace/
+repos/
 
 # Optional: local PyPI creds (uncomment if you ever create it)
 # .pypirc

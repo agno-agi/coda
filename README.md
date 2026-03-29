@@ -208,7 +208,7 @@ Coda's learning is powered by [Agno's Learning Machines](https://docs.agno.com/l
 ## Architecture
 
 ```
-Slack → Coda (Team Leader, TasksMode)
+Slack → Coda (Team Leader, Coordinate)
         ├─ Coder Agent
         │   ├─ CodingTools (read/write/edit/shell/grep/find)
         │   ├─ GitTools (log/diff/blame/worktree)

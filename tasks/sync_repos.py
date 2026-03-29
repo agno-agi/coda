@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml  # type: ignore[import-untyped]
 from agno.scheduler import ScheduleManager
 
-from coda.agents.settings import REPOS_DIR
+from coda.settings import REPOS_DIR
 from db import get_postgres_db
 
 REPOS_CONFIG = Path(getenv("REPOS_CONFIG", str(Path(__file__).parents[1] / "repos.yaml")))

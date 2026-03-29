@@ -4,9 +4,9 @@ A code companion that lives in Slack. Understands code by searching it directly 
 
 ## Architecture
 
-- Team definition: `coda/team.py` (Coda team leader, TasksMode)
+- Team definition: `coda/team.py` (Coda team leader, Coordinate mode)
 - Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer)
-- Shared settings: `coda/agents/settings.py` (DB, REPOS_DIR, learnings KB)
+- Shared settings: `coda/settings.py` (DB, REPOS_DIR, learnings KB)
 - API server: `app/main.py` (FastAPI + AgentOS + Slack interface)
 - Custom tools: `coda/tools/git.py` (GitTools)
 - GitHub tools: Agno built-in `GithubTools` (scoped per agent)
@@ -15,7 +15,7 @@ A code companion that lives in Slack. Understands code by searching it directly 
 
 ## Team Structure
 ```
-Coda (Team, TasksMode, gpt-5.4)
+Coda (Team, Coordinate, gpt-5.4)
 ├── Coder — writes code in worktrees, opens PRs
 ├── Explorer — searches code, traces flows, reviews PRs/branches, triages issues (read-only)
 └── [leader responds directly for greetings/simple questions]
@@ -29,7 +29,7 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 
 ## Key Concepts
 
-- **TasksMode:** Leader decomposes goals into tasks, delegates to members, loops until done
+- **Coordinate mode:** Leader picks the right specialist, delegates with context, synthesizes results
 - **CodingTools:** file read/write/edit, shell, grep, find, ls (Coder: all=True, Explorer: read-only)
 - **GitTools:** git log/diff/blame/show, repo listing, branch listing/diffing, worktree lifecycle (create/list/remove)
 - **GithubTools:** Agno built-in — PR read/review/create/comment, issues read/comment, code search (scoped via include_tools)
@@ -48,9 +48,9 @@ coda/
 ├── coda/
 │   ├── team.py           # Coda team definition (leader)
 │   ├── agents/
-│   │   ├── settings.py   # Shared DB, paths, knowledge
 │   │   ├── coder.py      # Coder agent
 │   │   └── explorer.py   # Explorer agent
+│   ├── settings.py       # Shared DB, paths, knowledge
 │   └── tools/
 │       └── git.py        # GitTools toolkit
 ├── db/
