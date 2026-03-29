@@ -81,8 +81,39 @@ Picks up coding standards, conventions, patterns from interactions.
 Background tasks on a cron schedule via Agno ScheduleManager.
 
 - **Repo sync:** pulls latest changes every 5 minutes (`POST /sync`)
-- **Issue triage:** reviews open issues daily, weekdays 9 AM UTC (`POST /teams/coda/runs`)
+- **Daily issue triage:** classifies new issues and posts to Slack (`POST /triage-issues`)
 - **Startup sync:** repos are synced on application startup
+
+### 8. Daily Issue Triage
+
+Automated daily scan that replaces standalone issue bots. Runs as a
+lightweight pipeline — no team/agent delegation overhead.
+
+**Pipeline:** Fetch (GitHub API) → Classify (GPT-5.4) → Post (Slack SDK)
+
+**Categories:**
+- **MAJOR_BUG** — crashes, data loss, security vulnerabilities, regressions
+- **LOW_HANGING_FRUIT** — quick wins: typos, small fixes, good first issues
+- **SLOP** — AI-generated low-quality issues (vague, no repro, generic suggestions)
+- **OTHER** — feature requests, questions, discussions (not posted to Slack)
+
+**Slack output:** Posts to the channel set by `TRIAGE_CHANNEL` env var.
+Only surfaces Major Bugs, Low-Hanging Fruit, and Slop — skips Other.
+Includes clickable issue links and 1-line summaries.
+
+**Schedule:** Daily at 4 AM UTC. Register with `python -m tasks.review_issues --schedule`.
+
+**Manual trigger:** `POST /triage-issues` or `python -m tasks.review_issues`.
+
+**Configuration:**
+- Set `TRIAGE_CHANNEL` to the Slack channel ID (e.g. `C0ADMCGSJ8H`).
+  Find it in Slack: right-click channel → View details → ID at the bottom.
+- Requires `GITHUB_ACCESS_TOKEN` and `SLACK_TOKEN` (already required by Coda).
+- Repos are read from `repos.yaml` — all configured repos are triaged.
+
+**Extending:** To add new categories, update the `IssueClassification` Literal
+type and the classifier instructions in `tasks/review_issues.py`. To change
+the schedule, update the cron in the `__main__` block.
 
 ## Agents
 

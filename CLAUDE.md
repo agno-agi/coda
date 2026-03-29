@@ -39,7 +39,8 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 - **LearningMachine:** saves and retrieves team conventions, patterns, gotchas (AGENTIC mode)
 - **Agentic Memory:** tracks user preferences and observations (team-level only)
 - **Worktrees:** each coding task gets a `coda/*` branch via `git worktree add`
-- **Scheduled Tasks:** repo sync (every 5 min), issue triage (daily on weekdays)
+- **Scheduled Tasks:** repo sync (every 5 min), daily issue triage (4 AM UTC)
+- **Daily Issue Triage:** standalone pipeline (fetch → classify → Slack), not via team agents. Categories: Major Bug, Low-Hanging Fruit, Slop, Other. Config: `TRIAGE_CHANNEL` env var.
 
 ## Structure
 ```
@@ -90,7 +91,8 @@ Connect via Slack (see docs/SLACK_CONNECT.md) or CLI (`python -m coda`).
 3. Configure `repos.yaml` (which repos to learn)
 4. Run locally (`docker compose up -d --build`)
 5. Connect to Slack (docs/SLACK_CONNECT.md — requires app to be running first)
-6. Deploy to cloud (optional)
+6. (Optional) Set `TRIAGE_CHANNEL` in `.env` for daily issue triage — see `docs/SPEC.md` § Daily Issue Triage
+7. Deploy to cloud (optional)
 
 ## Local Development
 ```bash
@@ -120,3 +122,4 @@ python -m evals.run --verbose            # Show details
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `DB_*` | No | Database config (defaults to localhost) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos in Docker) |
+| `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage (e.g. `C0ADMCGSJ8H`) |
