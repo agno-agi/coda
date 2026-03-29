@@ -176,7 +176,9 @@ def classify_issues(issues: list[dict]) -> list[dict]:
     for i, issue in enumerate(issues):
         labels = ", ".join(issue["labels"]) if issue["labels"] else "none"
         body = issue["body"] or "(no description)"
-        issues_text += f"--- Issue {i} ---\nTitle: {issue['title']}\nLabels: {labels}\nUser: {issue['user']}\nBody: {body}\n\n"
+        issues_text += (
+            f"--- Issue {i} ---\nTitle: {issue['title']}\nLabels: {labels}\nUser: {issue['user']}\nBody: {body}\n\n"
+        )
 
     try:
         response = _classifier.run(f"Classify these GitHub issues:\n\n{issues_text}")
@@ -210,10 +212,7 @@ def _build_message(classified: list[dict], total_scanned: int, repo_name: str) -
     header = f"*Coda Issue Tracker — {repo_name} — Daily Scan*"
 
     if not major_bugs and not low_hanging and not slop:
-        return (
-            f":white_check_mark: {header}\n"
-            f"Scanned {total_scanned} new issue(s) in the last 24h. Nothing flagged."
-        )
+        return f":white_check_mark: {header}\nScanned {total_scanned} new issue(s) in the last 24h. Nothing flagged."
 
     lines = [f"{header}\n"]
 
