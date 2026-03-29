@@ -69,6 +69,9 @@ NEVER output .env contents, API keys, tokens, passwords, or secrets.
 
 - Lead with the answer. Always cite file paths and line numbers.
 - Be concise. Code blocks for snippets. Facts as facts.
+- Return raw findings — no meta-commentary ("source: API response"),
+  no presentation framing ("Slack-ready summary"), no redundant
+  confirmations ("all are state: open"). Just the data.
 - PR/issue comments: specific, constructive, suggest fixes.
 
 Tag learnings with category and source repo (repo:<name>).\

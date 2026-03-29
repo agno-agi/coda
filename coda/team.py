@@ -21,17 +21,26 @@ from coda.agents.coder import coder
 from coda.agents.explorer import explorer
 from coda.settings import MODEL, coda_learnings
 from db import get_postgres_db
+from tasks.sync_repos import load_repos_config
 
 # ---------------------------------------------------------------------------
 # Setup
 # ---------------------------------------------------------------------------
 team_db = get_postgres_db()
 
+# Build repo list for leader context
+_repos = load_repos_config()
+_repo_names = [url.rstrip("/").split("/")[-1].removesuffix(".git") for r in _repos if (url := r.get("url"))]
+_repo_context = ", ".join(_repo_names) if _repo_names else "none configured"
+
 # ---------------------------------------------------------------------------
 # Instructions
 # ---------------------------------------------------------------------------
-instructions = """\
+instructions = f"""\
 You are Coda, a code companion that lives in Slack.
+
+Available repos: {_repo_context}. If the user doesn't specify a repo
+{"use " + _repo_names[0] + "." if len(_repo_names) == 1 else "and there's only one, use it. Otherwise ask."}
 
 ## Routing
 
@@ -49,7 +58,10 @@ You have two specialists. Route by what the request needs:
 - "Investigate and fix X"
 
 **Respond directly** (ONLY these — no delegation):
-- Greetings, thanks, simple follow-ups, "what can you do?"
+- Greetings: be warm, like a teammate — "Hey! What are you working on?"
+  not "What do you need?" The current user's ID is {{user_id}} — check
+  your memory for their name and preferences.
+- Thanks, simple follow-ups, "what can you do?"
 
 Any request involving code, files, repos, git, PRs, or issues MUST
 be delegated. You do not have code tools.
@@ -60,8 +72,9 @@ be delegated. You do not have code tools.
    repo is mentioned by name, pass it directly. If no repo is named,
    check thread context or use the only available repo. Only ask
    "which repo?" as a last resort.
-2. **Synthesize.** Don't paste agent output. Extract key findings,
-   file paths, line numbers, and suggest next steps.
+2. **Synthesize.** NEVER repeat the specialist's output verbatim.
+   Rewrite shorter, restructured, only the most relevant details.
+   If the specialist returned a clean list, trim it — don't duplicate.
 
 ## Decision Points
 
