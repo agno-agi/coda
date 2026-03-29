@@ -8,6 +8,7 @@ Run:
     python -m app.main
 """
 
+from contextlib import asynccontextmanager
 from os import getenv
 from pathlib import Path
 
@@ -37,11 +38,21 @@ if SLACK_TOKEN and SLACK_SIGNING_SECRET:
     interfaces.append(
         Slack(
             team=coda,
-            streaming=True,  # type: ignore[call-arg]
-            token=SLACK_TOKEN,  # type: ignore[call-arg]
-            signing_secret=SLACK_SIGNING_SECRET,  # type: ignore[call-arg]
+            streaming=True,
+            token=SLACK_TOKEN,
+            signing_secret=SLACK_SIGNING_SECRET,
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Lifespan
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app):
+    sync_all_repos()
+    yield
+
 
 # ---------------------------------------------------------------------------
 # Create AgentOS
@@ -55,6 +66,7 @@ agent_os = AgentOS(
     teams=[coda],
     interfaces=interfaces,
     config=str(Path(__file__).parent / "config.yaml"),
+    lifespan=lifespan,
 )
 
 app = agent_os.get_app()
@@ -79,11 +91,6 @@ async def review_issues() -> dict[str, str]:
     sent so you can verify repos.yaml is parsed correctly.
     """
     return {"prompt": build_issue_review_prompt()}
-
-
-@app.on_event("startup")
-def _startup_sync() -> None:
-    sync_all_repos()
 
 
 if __name__ == "__main__":
