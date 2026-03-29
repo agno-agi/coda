@@ -155,7 +155,7 @@ Coda pulls PR details, reads the changed files, diffs them against your conventi
 
 ### Triage Issues
 
-Coda reads your open issues and understands them in the context of the actual code. Ask it what's worth working on, or let it tell you — on a schedule, Coda reviews recent issues and posts a summary to your Slack channel: what's urgent, what's low-hanging fruit, and what the codebase already does nearby.
+Coda reads your open issues and understands them in the context of the actual code. Ask it what's worth working on, or let it tell you.
 
 ```
 @Coda what are the open issues?
@@ -163,10 +163,21 @@ Coda reads your open issues and understands them in the context of the actual co
 @Coda review the top 10 open issues and summarize them
 ```
 
+### Stay on Top of Things
+
+Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the background and post to your Slack channels automatically.
+
+**Daily Digest** — every morning, Coda posts a summary of your repositories: what merged yesterday, what PRs are waiting for review, what issues were opened, and what's gone stale. Like a standup that writes itself.
+
+**Issue Triage** — on a schedule, Coda reviews your open issues against the actual codebase, categorizes them by effort and urgency, and posts recommendations: here's what's low-hanging, here's what's complex, here's what the code already does nearby.
+
+**Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
+
+These run out of the box. You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
+
 ### Write Code
 
 When you're ready, Coda writes code in isolated git worktrees and opens PRs. Your main branch is never touched.
-
 ```
 @Coda add rate limiting to /api/v1/users using the same pattern as /orders
 @Coda fix the NoResultFound bug in payment_service
@@ -176,7 +187,6 @@ When you're ready, Coda writes code in isolated git worktrees and opens PRs. You
 ### Learn Over Time
 
 Coda gets sharper the more you use it.
-
 ```
 Week 1:  @Coda add a new endpoint for exporting invoices
          → Writes working code using generic patterns

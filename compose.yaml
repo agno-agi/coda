@@ -28,8 +28,9 @@ services:
       # Persistent repos: where Coda clones repos & creates worktrees
       - repos:/repos
     environment:
-      - RUNTIME_ENV=dev
       - PYTHONPATH=/app
+      - RUNTIME_ENV=dev
+      - AGNO_DEBUG=True
       - AGENTOS_URL=http://127.0.0.1:8000
       # Database
       - DB_HOST=coda-db
