@@ -41,6 +41,7 @@ if SLACK_TOKEN and SLACK_SIGNING_SECRET:
             streaming=True,
             token=SLACK_TOKEN,
             signing_secret=SLACK_SIGNING_SECRET,
+            resolve_user_identity=True,
         )
     )
 
