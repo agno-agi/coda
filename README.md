@@ -149,7 +149,7 @@ If you were using ngrok for local development, you can stop it now — Slack wil
 
 ### Explore Your Code
 
-Ask a question in Slack and get an answer grounded in the actual code — with file paths and line numbers. Coda reads files, greps through them, and follows call chains to trace how things connect.
+Ask a question in Slack and get an answer grounded in the actul code — with file paths and line numbers. Coda reads files, greps through them, and follows call chains to trace how things connect.
 
 ```
 @Coda where is the webhook handler for Stripe events?
