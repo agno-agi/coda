@@ -79,9 +79,9 @@ Confirm Coda is running at [http://localhost:8000/docs](http://localhost:8000/do
 
 ### 5. Connect to the Web UI
 
-Coda runs on [Agno AgentOS](https://docs.agno.com/agent-os/introduction), which gives you a web UI to chat with Coda directly — plus monitoring and debugging tools like sessions, traces, metrics, memory, and evaluations.
+Coda runs on [Agno AgentOS](https://docs.agno.com/agent-os/introduction?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=docs), which gives you a web UI to chat with Coda directly — plus monitoring and debugging tools like sessions, traces, metrics, memory, and evaluations.
 
-1. Open [os.agno.com](https://os.agno.com) and log in
+1. Open [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and log in
 2. Add OS → Local → `http://localhost:8000`
 3. Click "Connect"
 
@@ -212,7 +212,7 @@ Week 4:  @Coda add a new endpoint for exporting invoices
            the same logging your other export endpoints use
 ```
 
-Coda's learning is powered by [Agno's Learning Machines](https://docs.agno.com/learning/overview).
+Coda's learning is powered by [Agno's Learning Machines](https://docs.agno.com/learning/overview?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=docs).
 
 ## What Coda Doesn't Do
 
