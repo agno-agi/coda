@@ -2,9 +2,10 @@
 
 ############################################################################
 #
-#    Agno Railway Deployment
+#    Agno Railway Setup (first-time provisioning)
 #
 #    Usage: ./scripts/railway_up.sh
+#    Redeploy: ./scripts/railway_redeploy.sh
 #
 #    Prerequisites:
 #      - Railway CLI installed
@@ -59,33 +60,45 @@ railway init -n "coda"
 echo ""
 echo -e "${BOLD}Deploying PgVector database...${NC}"
 echo ""
-railway deploy -t 3jJFCA
+railway add -s pgvector -i agnohq/pgvector:18 \
+    -v "POSTGRES_USER=${DB_USER:-ai}" \
+    -v "POSTGRES_PASSWORD=${DB_PASS:-ai}" \
+    -v "POSTGRES_DB=${DB_DATABASE:-ai}" \
+    -v "PGDATA=/var/lib/postgresql/data"
 
 echo ""
-echo -e "${DIM}Waiting 10s for database...${NC}"
-sleep 10
+echo ""
+echo -e "${BOLD}Adding database volume...${NC}"
+railway service link pgvector
+railway volume add -m /var/lib/postgresql/data 2>/dev/null || echo -e "${DIM}Volume already exists or skipped${NC}"
+
+echo ""
+echo -e "${DIM}Waiting 15s for database...${NC}"
+sleep 15
 
 echo ""
 echo -e "${BOLD}Creating application service...${NC}"
 echo ""
-railway add --service coda \
-    --variables 'DB_USER=${{pgvector.PGUSER}}' \
-    --variables 'DB_PASS=${{pgvector.PGPASSWORD}}' \
-    --variables 'DB_HOST=${{pgvector.PGHOST}}' \
-    --variables 'DB_PORT=${{pgvector.PGPORT}}' \
-    --variables 'DB_DATABASE=${{pgvector.PGDATABASE}}' \
-    --variables "DB_DRIVER=postgresql+psycopg" \
-    --variables "WAIT_FOR_DB=True" \
-    --variables "REPOS_DIR=/repos" \
-    --variables "OPENAI_API_KEY=${OPENAI_API_KEY}" \
-    --variables "GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-}" \
-    --variables "SLACK_TOKEN=${SLACK_TOKEN:-}" \
-    --variables "SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}" \
-    --variables "PORT=8000"
+railway add -s coda \
+    -v "DB_USER=${DB_USER:-ai}" \
+    -v "DB_PASS=${DB_PASS:-ai}" \
+    -v "DB_HOST=pgvector.railway.internal" \
+    -v "DB_PORT=${DB_PORT:-5432}" \
+    -v "DB_DATABASE=${DB_DATABASE:-ai}" \
+    -v "DB_DRIVER=postgresql+psycopg" \
+    -v "WAIT_FOR_DB=True" \
+    -v "REPOS_DIR=/repos" \
+    -v "OPENAI_API_KEY=${OPENAI_API_KEY}" \
+    -v "GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-}" \
+    -v "SLACK_TOKEN=${SLACK_TOKEN:-}" \
+    -v "SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}" \
+    -v "TRIAGE_CHANNEL=${TRIAGE_CHANNEL:-}" \
+    -v "PORT=8000"
 
 echo ""
-echo -e "${BOLD}Adding persistent volume...${NC}"
 echo ""
+echo -e "${BOLD}Adding repos volume...${NC}"
+railway service link coda
 railway volume add -m /repos 2>/dev/null || echo -e "${DIM}Volume already exists or skipped${NC}"
 
 echo ""

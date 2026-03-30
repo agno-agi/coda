@@ -1,10 +1,6 @@
 # ===========================================================================
 # Coda - Code Companion
 # ===========================================================================
-# Runs as a non-root user (coda) with filesystem access restricted to:
-#   /repos   - persistent volume for cloned repos and worktrees
-#   /app     - read-only application code (writable only in dev via bind mount)
-# ===========================================================================
 
 FROM agnohq/python:3.12
 
@@ -26,26 +22,18 @@ RUN git config --system init.defaultBranch main \
     && git config --system advice.detachedHead false
 
 # ---------------------------------------------------------------------------
-# Create non-root user
-# ---------------------------------------------------------------------------
-RUN groupadd -r coda && useradd -r -g coda -m -s /bin/bash coda
-
-# ---------------------------------------------------------------------------
 # Application code
 # ---------------------------------------------------------------------------
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --no-cache-dir --system -r requirements.txt
 COPY . .
 ENV PYTHONPATH=/app
 
 # ---------------------------------------------------------------------------
-# Directory setup & permissions
+# Directory setup
 # ---------------------------------------------------------------------------
-# /repos - persistent volume for cloned repos and worktrees
-RUN mkdir -p /repos \
-    && chown -R coda:coda /repos \
-    && chmod 755 /app
+RUN mkdir -p /repos
 
 # ---------------------------------------------------------------------------
 # GitHub token configuration
@@ -70,12 +58,6 @@ RUN printf '%s\n' \
 # ---------------------------------------------------------------------------
 RUN chmod +x /app/scripts/entrypoint.sh
 ENTRYPOINT ["/app/scripts/entrypoint.sh"]
-
-# ---------------------------------------------------------------------------
-# Switch to non-root user
-# ---------------------------------------------------------------------------
-USER coda
-WORKDIR /app
 
 # ---------------------------------------------------------------------------
 # Default command (overridden by compose)

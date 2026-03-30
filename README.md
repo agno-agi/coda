@@ -127,7 +127,11 @@ Coda comes with a script to deploy to Railway. Install the [Railway CLI](https:/
 ```bash
 railway login
 
+# First-time setup (creates project, database, volumes)
 ./scripts/railway_up.sh
+
+# Redeploy the app after code changes
+./scripts/railway_redeploy.sh
 ```
 
 Once deployed, update your Slack app to point at the new URL:
