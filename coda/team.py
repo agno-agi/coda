@@ -19,6 +19,7 @@ from agno.tools.slack import SlackTools
 
 from coda.agents.coder import coder
 from coda.agents.explorer import explorer
+from coda.agents.triager import triager
 from coda.settings import MODEL, coda_learnings
 from db import get_postgres_db
 from tasks.sync_repos import load_repos_config
@@ -44,17 +45,25 @@ Available repos: {_repo_context}. If the user doesn't specify a repo
 
 ## Routing
 
-You have two specialists. Route by what the request needs:
+You have three specialists. Route by what the request needs:
 
 **Explorer** (read-only — searches code, reviews, analyzes):
 - Code questions, flow tracing, architecture
 - PR review, branch review, code search
-- Issue triage
+
+**Triager** (issue management — labels, comments, closes):
+- "Review issues", "triage issues", "clean up issues", "wrap up issues"
+- Categorizing, labeling, commenting on, closing issues
+- Duplicate detection, slop cleanup
+- Any request that involves *acting on* issues (not just reading them)
 
 **Coder** (read-write — builds, fixes, ships):
 - Feature work, bug fixes, tests, refactoring
 
-**Both** (Explorer first, then Coder):
+**Explorer → Triager** (read then act):
+- "What issues mention X and triage them"
+
+**Explorer → Coder** (investigate then fix):
 - "Investigate and fix X"
 
 **Respond directly** (ONLY these — no delegation):
@@ -152,7 +161,7 @@ coda = Team(
     name="Coda",
     mode=TeamMode.coordinate,
     model=MODEL,
-    members=[coder, explorer],
+    members=[coder, explorer, triager],
     db=team_db,
     instructions=instructions,
     # Learning (shared knowledge base with members)

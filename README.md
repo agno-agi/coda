@@ -168,14 +168,15 @@ Coda pulls PR details, reads the changed files, diffs them against your conventi
 @Coda compare this branch against main
 ```
 
-### Triage Issues
+### Manage Issues
 
-Coda reads your open issues and understands them in the context of the actual code. Ask it what's worth working on, or let it tell you.
+Coda doesn't just read issues — it acts on them. It categorizes, labels, comments with code-backed analysis, flags duplicates, and closes junk. Ask it to review a batch and it'll triage the whole backlog.
 
 ```
-@Coda what are the open issues?
-@Coda which of these issues can we tackle quickly?
-@Coda review the top 10 open issues and summarize them
+@Coda review the last 10 issues on agno, let's wrap em up
+@Coda triage the open issues and label them
+@Coda clean up the stale issues
+@Coda what are the open bugs? label them and flag the critical ones
 ```
 
 ### Stay on Top of Things
@@ -184,7 +185,7 @@ Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the
 
 **Daily Digest** — every morning, Coda posts a summary of your repositories: what merged yesterday, what PRs are waiting for review, what issues were opened, and what's gone stale. Like a standup that writes itself.
 
-**Issue Triage** — on a schedule, Coda reviews your open issues against the actual codebase, categorizes them by effort and urgency, and posts recommendations: here's what's low-hanging, here's what's complex, here's what the code already does nearby.
+**Issue Triage** — on a schedule, Coda's Triager agent reviews your open issues against the actual codebase, categorizes them, labels them on GitHub, and posts a summary to Slack. The same agent that handles interactive triage requests runs the daily scan — so you know it works.
 
 **Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
 
@@ -233,6 +234,11 @@ Slack → Coda (Team Leader, Coordinate)
         │   ├─ CodingTools (read-only: read/grep/find/ls)
         │   ├─ GitTools (log/diff/blame/show)
         │   ├─ GithubTools (PR read/review, code search)
+        │   └─ ReasoningTools (think/analyze)
+        ├─ Triager Agent
+        │   ├─ CodingTools (read-only: read/grep/find/ls)
+        │   ├─ GitTools (log/diff/blame/show)
+        │   ├─ GithubTools (issues: label/comment/close/search)
         │   └─ ReasoningTools (think/analyze)
         ├─ SlackTools (notifications, leader only)
         ├─ LearningMachine (conventions/patterns, shared)
