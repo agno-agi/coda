@@ -40,7 +40,7 @@ Use your deployed URL (e.g. `https://coda.yourdomain.com`).
     "display_information": {
         "name": "Coda",
         "description": "A code companion that lives in Slack.",
-        "background_color": "#F97316"
+        "background_color": "#000000"
     },
     "features": {
         "app_home": {

@@ -281,5 +281,56 @@ python -m evals.run_evals --category security
 | `DB_PASS` | No | PostgreSQL password (default: ai) |
 | `DB_DATABASE` | No | PostgreSQL database (default: ai) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
+| `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
+
+## Running Local + Production
+
+If Coda is already deployed (e.g. on Railway), you can run a second instance locally for development. The key constraint is that each Slack app can only deliver events to one URL, so you need a separate Slack app for local.
+
+### 1. Create a "Coda Dev" Slack app
+
+Follow the same steps in [docs/SLACK_CONNECT.md](docs/SLACK_CONNECT.md), but create a new app (e.g. "Coda Dev") in your workspace. You'll get a separate bot token and signing secret.
+
+### 2. Set up a local env file
+
+```bash
+cp .env .env.local
+```
+
+Edit `.env.local` and replace the Slack credentials with the ones from your "Coda Dev" app:
+
+```bash
+# .env.local — local development
+SLACK_TOKEN=xoxb-***-dev-token
+SLACK_SIGNING_SECRET=***-dev-secret
+
+# These can stay the same as production
+OPENAI_API_KEY=sk-***
+GITHUB_ACCESS_TOKEN=github_pat_***
+```
+
+### 3. Expose localhost to Slack
+
+Slack needs a public URL to send events to. Use [ngrok](https://ngrok.com):
+
+```bash
+ngrok http 8000
+```
+
+Copy the `https://...ngrok.io` URL. In your "Coda Dev" Slack app settings, set the Request URL to:
+
+```
+https://<your-id>.ngrok-free.app/slack/events
+```
+
+### 4. Run locally
+
+```bash
+docker compose --env-file .env.local up -d --build
+```
+
+Your production instance on Railway continues to run with `.env` and the production Slack app. Your local instance runs with `.env.local` and the dev Slack app. Both work independently.
+
+> **Tip:** Add `.env.local` to `.gitignore` if it isn't already. Never commit either env file.
 
 <p align="center">Built on <a href="https://github.com/agno-agi/agno">Agno</a> · the runtime for agentic software</p>
