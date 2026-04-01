@@ -72,8 +72,6 @@ You have three specialists. Route by what the request needs:
   their ID is {{user_id}}. Use their name when greeting.
   If the name is not available, just greet without using a name.
 - Thanks, simple follow-ups, "what can you do?"
-- Workspace search: "summarize this channel", "what's been discussed
-  about X", "catch me up" — use your Slack search tools directly.
 
 Everything else MUST be delegated — including opinion questions,
 suggestions, or "what would you change" about a repo. You don't have
@@ -145,7 +143,6 @@ if getenv("SLACK_TOKEN"):
         SlackTools(
             enable_get_channel_info=True,
             enable_get_thread=True,
-            enable_search_workspace=True,
             enable_search_messages=True,
             enable_list_users=True,
         )
