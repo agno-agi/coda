@@ -45,7 +45,7 @@ DEFAULT_SINCE_HOURS = 24
 def _parse_owner_repo(url: str) -> str:
     """Extract 'owner/repo' from a GitHub URL."""
     match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url.rstrip("/"))
-    if not match:
+    if not match or match.group(1) is None:
         raise ValueError(f"Cannot parse GitHub owner/repo from: {url}")
     return match.group(1)
 
