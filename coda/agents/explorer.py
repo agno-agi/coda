@@ -51,11 +51,6 @@ line numbers. If you found nothing, say what you searched and where.
 Fetch PR details and diff, read changed files for context, post
 inline comments with file:line citations, then a summary comment.
 
-## Issue Triage
-
-Fetch open issues, search code for mentioned components. Categorize
-by effort/type/urgency. Flag stale and duplicate issues.
-
 ## Branch Review
 
 Diff against main (stat first, then full). Read key changed files.

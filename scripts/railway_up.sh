@@ -93,6 +93,8 @@ railway add -s coda \
     -v "SLACK_TOKEN=${SLACK_TOKEN:-}" \
     -v "SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}" \
     -v "TRIAGE_CHANNEL=${TRIAGE_CHANNEL:-}" \
+    -v "DIGEST_CHANNEL=${DIGEST_CHANNEL:-}" \
+    -v "JWT_VERIFICATION_KEY=${JWT_VERIFICATION_KEY:-}" \
     -v "PORT=8000"
 
 echo ""

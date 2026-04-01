@@ -41,8 +41,9 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 - **LearningMachine:** saves and retrieves team conventions, patterns, gotchas (AGENTIC mode)
 - **Agentic Memory:** tracks user preferences and observations (team-level only)
 - **Worktrees:** each coding task gets a `coda/*` branch via `git worktree add`
-- **Scheduled Tasks:** repo sync (every 5 min), daily issue triage (4 AM UTC)
+- **Scheduled Tasks:** repo sync (every 5 min), daily issue triage (4 AM UTC), daily digest (8 AM UTC)
 - **Daily Issue Triage:** uses the Triager agent (fetch → Triager agent → Slack). The same agent that handles interactive triage runs the daily scan — categorizes, labels, comments, but does NOT close issues during automated runs. Config: `TRIAGE_CHANNEL` env var.
+- **Daily Digest:** morning activity summary — merged PRs, open PRs, new issues, stale issues. Pure GitHub API, no agent. Config: `DIGEST_CHANNEL` env var.
 
 ## Structure
 ```
@@ -64,7 +65,8 @@ coda/
 │   └── url.py            # Database URL builder
 ├── tasks/
 │   ├── sync_repos.py     # Repo sync (every 5 min)
-│   └── review_issues.py  # Issue triage (daily, weekdays)
+│   ├── review_issues.py  # Issue triage (daily)
+│   └── daily_digest.py   # Activity digest (daily)
 ├── evals/
 │   ├── run.py            # Unified eval runner
 │   └── cases/            # Test cases by category (security, routing, exploration, synthesis, refusal)
@@ -96,6 +98,7 @@ Connect via Slack (see docs/SLACK_CONNECT.md) or CLI (`python -m coda`).
 5. Connect to Slack (docs/SLACK_CONNECT.md — requires app to be running first)
 6. (Optional) Set `TRIAGE_CHANNEL` in `.env` for daily issue triage — see `docs/SPEC.md` § Daily Issue Triage
 7. Deploy to cloud (optional)
+8. Secure production (JWT_VERIFICATION_KEY from os.agno.com)
 
 ## Local Development
 ```bash
@@ -126,3 +129,5 @@ python -m evals.run --verbose            # Show details
 | `DB_*` | No | Database config (defaults to localhost) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos in Docker) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage (e.g. `C0ADMCGSJ8H`) |
+| `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |
+| `JWT_VERIFICATION_KEY` | Production | RBAC public key from os.agno.com |

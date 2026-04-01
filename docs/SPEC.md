@@ -86,6 +86,7 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 
 - **Repo sync:** pulls latest changes every 5 minutes (`POST /sync`)
 - **Daily issue triage:** classifies new issues and posts to Slack (`POST /triage-issues`)
+- **Daily digest:** morning activity summary — merged PRs, open PRs, new/stale issues (`POST /digest`)
 - **Startup sync:** repos are synced on application startup
 
 ### 8. Daily Issue Triage
@@ -113,6 +114,28 @@ it does **not** close or reopen issues — only categorizes, labels, and comment
 **Extending:** To change categories or triage behavior, update the Triager
 agent instructions in `coda/agents/triager.py`. To change the schedule,
 update the cron in the `__main__` block of `tasks/review_issues.py`.
+
+### 9. Daily Digest
+
+Morning summary posted to Slack: merged PRs, open PRs waiting for
+review, new issues, and stale issues. Pure GitHub API — no agent involved.
+
+**Pipeline:** Fetch (GitHub API) → Format → Post (Slack SDK)
+
+**Sections:**
+- Merged — PRs merged in the last 24h
+- Waiting for Review — all open PRs
+- New Issues — issues created in the last 24h
+- Stale — issues with no activity in 7+ days (shows top 10)
+
+**Schedule:** Daily at 8 AM UTC. Register with `python -m tasks.daily_digest --schedule`.
+
+**Manual trigger:** `POST /digest` or `python -m tasks.daily_digest`.
+
+**Configuration:**
+- Set `DIGEST_CHANNEL` to the Slack channel ID.
+- Requires `GITHUB_ACCESS_TOKEN` and `SLACK_TOKEN`.
+- Repos are read from `repos.yaml`.
 
 ## Agents
 
@@ -180,7 +203,8 @@ Custom Agno Toolkit wrapping git CLI operations:
 
 - FastAPI via AgentOS at `:8000`
 - `POST /sync` — trigger repo sync
-- `POST /review-issues` — return triage prompt (debug)
+- `POST /triage-issues` — run daily issue triage via Triager agent
+- `POST /digest` — run daily activity digest
 - `/docs` — Swagger UI
 
 ## Constraints
@@ -210,8 +234,9 @@ coda/
 │   ├── session.py       # PostgreSQL session factory + knowledge factory
 │   └── url.py           # Database URL builder
 ├── tasks/
-│   ├── sync_repos.py    # Repo sync (every 5 min)
-│   └── review_issues.py # Issue triage (daily, weekdays)
+│   ├── sync_repos.py     # Repo sync (every 5 min)
+│   ├── review_issues.py  # Issue triage (daily)
+│   └── daily_digest.py   # Activity digest (daily)
 ├── evals/
 │   ├── run.py           # Unified eval runner
 │   └── cases/           # Test cases by category

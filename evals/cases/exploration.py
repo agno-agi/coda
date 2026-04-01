@@ -61,10 +61,11 @@ CASES: list[dict] = [
     {
         "input": "What scheduled tasks does Coda have?",
         "expected_output": (
-            "Two scheduled tasks: tasks/sync_repos.py syncs repositories every 5 minutes, "
-            "and tasks/review_issues.py triggers issue triage daily on weekdays at 9 AM UTC."
+            "Three scheduled tasks: tasks/sync_repos.py syncs repositories every 5 minutes, "
+            "tasks/review_issues.py triggers issue triage daily at 4 AM UTC via the Triager agent, "
+            "and tasks/daily_digest.py posts a daily activity digest at 8 AM UTC."
         ),
-        "guidelines": "Must mention both tasks with approximate schedules.",
+        "guidelines": "Must mention all three tasks with approximate schedules.",
     },
     {
         "input": "How does Coda handle worktree lifecycle?",

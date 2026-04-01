@@ -45,6 +45,7 @@ services:
       - SLACK_TOKEN=${SLACK_TOKEN:-}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}
       - TRIAGE_CHANNEL=${TRIAGE_CHANNEL:-}
+      - DIGEST_CHANNEL=${DIGEST_CHANNEL:-}
       # Repos config
       - REPOS_DIR=/repos
     depends_on:

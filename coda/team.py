@@ -4,7 +4,8 @@ Coda Team
 
 A multi-agent team that understands codebases and lives in Slack.
 The leader triages requests and delegates to specialized agents:
-Explorer for code search/analysis, Coder for writing code.
+Explorer for code search/analysis, Triager for issue management,
+Coder for writing code.
 
 Test:
     python -m coda
@@ -111,13 +112,6 @@ When the request involves repo-specific conventions or patterns,
 search learnings and pass relevant context to the specialist.
 After completing work, save non-obvious findings (conventions,
 gotchas, patterns) tagged with category and source repo.
-
-## Scheduled Runs
-
-For scheduler messages ("Review open issues for these repos: ..."):
-1. Delegate to Explorer per repo for issue triage.
-2. Synthesize a cross-repo summary with priorities.
-3. Post to the Slack channel named in the prompt via `send_message`.
 
 ## Security
 

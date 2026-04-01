@@ -21,6 +21,7 @@ Coda can write code too — in isolated worktrees that never touch main — but 
 5. Connect to the Web UI.
 6. Connect to Slack.
 7. Deploy to your cloud provider.
+8. Secure your deployment.
 
 ### 1. Create your repo
 
@@ -130,6 +131,9 @@ railway login
 # First-time setup (creates project, database, volumes)
 ./scripts/railway_up.sh
 
+# Sync env vars after changing .env (handles multiline keys like PEM)
+./scripts/railway_env.sh
+
 # Redeploy the app after code changes
 ./scripts/railway_redeploy.sh
 ```
@@ -144,6 +148,10 @@ Once deployed, update your Slack app to point at the new URL:
 If you were using ngrok for local development, you can stop it now — Slack will route all messages to your deployed instance.
 
 > See `railway.json` to adjust CPU, memory, and replica settings.
+
+### 8. Secure your deployment
+
+Production requires RBAC authentication via AgentOS. See [Security](#security) below for setup — you'll need to connect your OS at [os.agno.com](https://os.agno.com) and add a `JWT_VERIFICATION_KEY` to your environment.
 
 ## What Coda Can Do
 
@@ -189,7 +197,11 @@ Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the
 
 **Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
 
-These run out of the box. You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
+Schedules are registered automatically on app startup — no manual setup needed. They're idempotent, so restarting the app just updates existing schedules. To trigger a triage manually: `POST /triage-issues`.
+
+For issue triage to post to Slack, set `TRIAGE_CHANNEL` in your env to the target channel ID (right-click channel in Slack → View details → copy ID).
+
+You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
 
 ### Write Code
 
@@ -259,7 +271,7 @@ docker compose up -d coda-db
 python -m coda
 
 # Run evals
-python -m evals.run_evals --category security
+python -m evals.run --category security
 
 # Format & lint
 ./scripts/format.sh
@@ -274,7 +286,6 @@ python -m evals.run_evals --category security
 | `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup guide](docs/GITHUB_ACCESS.md)) |
 | `SLACK_TOKEN` | No | Slack bot token ([setup guide](docs/SLACK_CONNECT.md)) |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
-| `CODA_MODEL` | No | Model for all agents (default: gpt-5.4) |
 | `DB_HOST` | No | PostgreSQL host (default: localhost) |
 | `DB_PORT` | No | PostgreSQL port (default: 5432) |
 | `DB_USER` | No | PostgreSQL user (default: ai) |
@@ -282,6 +293,36 @@ python -m evals.run_evals --category security
 | `DB_DATABASE` | No | PostgreSQL database (default: ai) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
+| `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |
+| `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com) |
+
+## Security
+
+Production deployments require authentication via [Agno AgentOS](https://docs.agno.com/agent-os/security/overview). This is enforced automatically — Coda enables [RBAC authorization](https://docs.agno.com/agent-os/security/rbac) when `RUNTIME_ENV=prd` (the default). Without a valid `JWT_VERIFICATION_KEY`, production endpoints will reject all requests.
+
+Local development (`RUNTIME_ENV=dev`, set by Docker Compose) runs without auth so you can iterate freely.
+
+### Setup
+
+1. Deploy Coda to your cloud provider (step 7 above)
+2. Open [os.agno.com](https://os.agno.com) and connect your deployed OS
+3. Go to **Settings** and generate a key pair
+4. Add the public key to your `.env` (paste the full PEM block, no quotes needed):
+
+```bash
+JWT_VERIFICATION_KEY=-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkq...
+-----END PUBLIC KEY-----
+```
+
+5. Push to production and redeploy:
+
+```bash
+./scripts/railway_env.sh
+./scripts/railway_redeploy.sh
+```
+
+The Agno control plane handles JWT issuance, session management, traces, metrics, and the web UI. See the [AgentOS Security docs](https://docs.agno.com/agent-os/security/overview) for details.
 
 ## Running Local + Production
 
