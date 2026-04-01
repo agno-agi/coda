@@ -160,6 +160,8 @@ if getenv("SLACK_TOKEN"):
             enable_get_thread=True,
             enable_search_messages=True,
             enable_list_users=True,
+            enable_upload_file=True,
+            enable_download_file=True,
         )
     )
 
