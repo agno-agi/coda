@@ -182,7 +182,7 @@ def classify_issues(issues: list[dict]) -> list[dict]:
 
     try:
         response = _classifier.run(f"Classify these GitHub issues:\n\n{issues_text}")
-        result: ClassificationResult = response.content
+        result: ClassificationResult = response.content  # type: ignore[assignment]
         index_map = {c.index: c for c in result.classifications}
     except Exception:
         log.exception("Classification failed — marking all as OTHER")
