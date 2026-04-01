@@ -141,6 +141,8 @@ tools: list = []
 if getenv("SLACK_TOKEN"):
     tools.append(
         SlackTools(
+            enable_send_message_thread=False,
+            enable_get_channel_history=False,
             enable_get_channel_info=True,
             enable_get_thread=True,
             enable_search_messages=True,
