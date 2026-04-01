@@ -19,7 +19,7 @@ Coda (Team leader, Coordinate mode, gpt-5.4)
 - **Framework:** Agno (AgentOS, Team, Agent)
 - **Interface:** Slack (via Agno Slack interface)
 - **Database:** PostgreSQL + pgvector (learnings only, not code indexing)
-- **Repos:** cloned to `/repos` volume, searched directly on disk
+- **Repos:** cloned to `/repos`, searched directly on disk (ephemeral in production, persistent volume in local dev)
 - **Model:** gpt-5.4 (all agents)
 
 ### Key Design Decisions

@@ -13,7 +13,7 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 - Custom tools: `coda/tools/git.py` (GitTools)
 - GitHub tools: Agno built-in `GithubTools` (scoped per agent)
 - Database: PostgreSQL + pgvector (for learnings only, not code indexing)
-- Repos: `/repos` volume (cloned repos, searched on disk)
+- Repos: `/repos` (cloned at startup, searched on disk; persistent volume in local dev, ephemeral in production)
 
 ## Team Structure
 ```

@@ -128,7 +128,7 @@ Coda comes with a script to deploy to Railway. Install the [Railway CLI](https:/
 ```bash
 railway login
 
-# First-time setup (creates project, database, volumes)
+# First-time setup (creates project, database)
 ./scripts/railway_up.sh
 
 # Sync env vars after changing .env (handles multiline keys like PEM)

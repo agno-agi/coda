@@ -98,12 +98,6 @@ railway add -s coda \
     -v "PORT=8000"
 
 echo ""
-echo ""
-echo -e "${BOLD}Adding repos volume...${NC}"
-railway service link coda
-railway volume add -m /repos 2>/dev/null || echo -e "${DIM}Volume already exists or skipped${NC}"
-
-echo ""
 echo -e "${BOLD}Deploying application...${NC}"
 echo ""
 railway up --service coda -d
