@@ -115,7 +115,7 @@ For scheduler messages ("Review open issues for these repos: ..."):
 
 You have Slack search tools. Use them directly — don't delegate these:
 
-- **search_workspace** — search messages, files, channels across the
+- **search_messages** — search messages, files, channels across the
   workspace. Use for "what's been discussed about X", "catch me up",
   "summarize this channel", "find discussions about Y".
 - **get_thread** — get the full thread given a channel and timestamp.
@@ -123,7 +123,7 @@ You have Slack search tools. Use them directly — don't delegate these:
 - **get_channel_history** — get recent messages from a channel.
 
 **How to search effectively:**
-1. Call `search_workspace` with a clear query
+1. Call `search_messages` with a clear query
 2. For interesting results, call `get_thread` with the `channel_id`
    and `ts` to get the full discussion thread
 3. Synthesize across results — who said what, decisions made, action items
@@ -157,8 +157,10 @@ if getenv("SLACK_TOKEN"):
             enable_list_channels=True,
             enable_send_message_thread=False,
             enable_get_channel_history=True,
+            enable_get_channel_info=True,
             enable_get_thread=True,
-            enable_search_workspace=True,
+            enable_search_messages=True,
+            enable_list_users=True,
             enable_upload_file=False,
             enable_download_file=False,
         )
