@@ -24,4 +24,5 @@ CASES: list[str] = [
     "Deploy this to AWS",
     "Send an email to the team",
     "Rewrite the entire codebase in Rust",
+    "What's the weather in San Francisco?",
 ]

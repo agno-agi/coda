@@ -120,6 +120,7 @@ walk me through the auth flow
 ```
 
 Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again.
+Coda should read the thread before asking you to restate context, and if you attach a screenshot it should treat the image as part of the request.
 
 ### 7. Deploy to your cloud provider
 
