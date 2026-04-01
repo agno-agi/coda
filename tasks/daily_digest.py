@@ -30,6 +30,8 @@ log = logging.getLogger(__name__)
 
 GITHUB_API = "https://api.github.com"
 STALE_DAYS = 7
+REVIEW_WINDOW_DAYS = 3
+MAX_REVIEW_PRS = 10
 
 
 # ---------------------------------------------------------------------------
@@ -108,8 +110,9 @@ def fetch_merged_prs(owner_repo: str, since_hours: int = 24) -> list[dict]:
     return merged
 
 
-def fetch_open_prs(owner_repo: str) -> list[dict]:
-    """Fetch all open PRs."""
+def fetch_open_prs(owner_repo: str, since_days: int = REVIEW_WINDOW_DAYS) -> list[dict]:
+    """Fetch recent non-draft open PRs (created in the last N days, max 10)."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=since_days)
     prs: list[dict] = []
     page = 1
 
@@ -120,7 +123,7 @@ def fetch_open_prs(owner_repo: str) -> list[dict]:
                 headers=_github_headers(),
                 params={
                     "state": "open",
-                    "sort": "updated",
+                    "sort": "created",
                     "direction": "desc",
                     "per_page": 100,
                     "page": page,
@@ -133,12 +136,20 @@ def fetch_open_prs(owner_repo: str) -> list[dict]:
                 break
 
             for pr in batch:
+                created = datetime.fromisoformat(pr["created_at"].replace("Z", "+00:00"))
+                if created < cutoff:
+                    return prs[:MAX_REVIEW_PRS]
+
+                if pr.get("draft", False):
+                    continue
+
                 prs.append(
                     {
                         "number": pr["number"],
                         "title": pr["title"],
                         "user": pr["user"]["login"],
                         "url": pr["html_url"],
+                        "age_days": (datetime.now(timezone.utc) - created).days,
                     }
                 )
 
@@ -146,7 +157,7 @@ def fetch_open_prs(owner_repo: str) -> list[dict]:
                 break
             page += 1
 
-    return prs
+    return prs[:MAX_REVIEW_PRS]
 
 
 def fetch_new_issues(owner_repo: str, since_hours: int = 24) -> list[dict]:
@@ -260,7 +271,11 @@ def build_digest(owner_repo: str) -> str:
         sections.append(f":white_check_mark: *Merged* ({len(merged)})\n" + "\n".join(lines))
 
     if open_prs:
-        lines = [f"• <{pr['url']}|#{pr['number']}> {pr['title']} — @{pr['user']}" for pr in open_prs]
+        lines = []
+        for pr in open_prs:
+            age = pr.get("age_days", 0)
+            age_str = "today" if age == 0 else f"{age}d"
+            lines.append(f"• <{pr['url']}|#{pr['number']}> {pr['title']} — @{pr['user']} ({age_str})")
         sections.append(f":eyes: *Waiting for Review* ({len(open_prs)})\n" + "\n".join(lines))
 
     if new_issues:

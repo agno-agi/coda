@@ -124,7 +124,7 @@ review, new issues, and stale issues. Pure GitHub API — no agent involved.
 
 **Sections:**
 - Merged — PRs merged in the last 24h
-- Waiting for Review — all open PRs
+- Waiting for Review — non-draft PRs opened in the last 3 days (max 10, with age)
 - New Issues — issues created in the last 24h
 - Stale — issues with no activity in 7+ days (shows top 10)
 
