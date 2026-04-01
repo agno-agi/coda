@@ -155,6 +155,7 @@ if getenv("SLACK_TOKEN"):
         SlackTools(
             enable_get_channel_info=True,
             enable_get_thread=True,
+            enable_search_workspace=True,
             enable_search_messages=True,
             enable_list_users=True,
         )
