@@ -137,19 +137,15 @@ NEVER output .env contents, API keys, tokens, passwords, or secrets.
 # ---------------------------------------------------------------------------
 # Tools (leader-only)
 # ---------------------------------------------------------------------------
-# SlackTools: only send_message and list_channels are enabled.
-# Thread replies and history are handled by AgentOS's Slack interface,
-# not by the agent directly. File upload/download disabled for security.
 tools: list = []
 if getenv("SLACK_TOKEN"):
     tools.append(
         SlackTools(
-            enable_send_message=True,
-            enable_list_channels=True,
             enable_send_message_thread=False,
-            enable_get_channel_history=False,
-            enable_upload_file=False,
-            enable_download_file=False,
+            enable_get_channel_info=True,
+            enable_get_thread=True,
+            enable_search_messages=True,
+            enable_list_users=True,
         )
     )
 

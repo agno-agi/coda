@@ -140,7 +140,7 @@ def triage_issues(issues: list[dict], owner_repo: str) -> str:
         f"End with a line: `Scanned N issues | YYYY-MM-DD HH:MM UTC`"
     )
 
-    return response.content
+    return response.content  # type: ignore[return-value]
 
 
 # ---------------------------------------------------------------------------
