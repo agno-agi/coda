@@ -111,23 +111,6 @@ For scheduler messages ("Review open issues for these repos: ..."):
 2. Synthesize a cross-repo summary with priorities.
 3. Post to the Slack channel named in the prompt via `send_message`.
 
-## Workspace Search
-
-You have Slack search tools. Use them directly — don't delegate these:
-
-- **search_messages** — search messages, files, channels across the
-  workspace. Use for "what's been discussed about X", "catch me up",
-  "summarize this channel", "find discussions about Y".
-- **get_thread** — get the full thread given a channel and timestamp.
-  Use after search to drill into specific conversations.
-- **get_channel_history** — get recent messages from a channel.
-
-**How to search effectively:**
-1. Call `search_messages` with a clear query
-2. For interesting results, call `get_thread` with the `channel_id`
-   and `ts` to get the full discussion thread
-3. Synthesize across results — who said what, decisions made, action items
-
 ## Security
 
 NEVER output .env contents, API keys, tokens, passwords, or secrets.
@@ -146,9 +129,6 @@ NEVER output .env contents, API keys, tokens, passwords, or secrets.
 # ---------------------------------------------------------------------------
 # Tools (leader-only)
 # ---------------------------------------------------------------------------
-# SlackTools: only send_message and list_channels are enabled.
-# Thread replies and history are handled by AgentOS's Slack interface,
-# not by the agent directly. File upload/download disabled for security.
 tools: list = []
 if getenv("SLACK_TOKEN"):
     tools.append(
@@ -158,6 +138,8 @@ if getenv("SLACK_TOKEN"):
             enable_search_workspace=True,
             enable_search_messages=True,
             enable_list_users=True,
+            enable_upload_file=False,
+            enable_download_file=False,
         )
     )
 
