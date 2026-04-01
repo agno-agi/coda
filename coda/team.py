@@ -155,14 +155,11 @@ if getenv("SLACK_TOKEN"):
         SlackTools(
             enable_send_message=True,
             enable_list_channels=True,
-            enable_send_message_thread=False,
             enable_get_channel_history=True,
             enable_get_channel_info=True,
             enable_get_thread=True,
             enable_search_messages=True,
             enable_list_users=True,
-            enable_upload_file=False,
-            enable_download_file=False,
         )
     )
 
