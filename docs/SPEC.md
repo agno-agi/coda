@@ -9,7 +9,8 @@ Coda is a code companion that lives in Slack. Helps engineering teams understand
 ```
 Coda (Team leader, Coordinate mode, gpt-5.4)
 ├── Coder — writes code in isolated worktrees, opens PRs
-├── Explorer — searches code, reviews PRs/branches, triages issues (read-only)
+├── Explorer — searches code, reviews PRs/branches (read-only)
+├── Triager — categorizes, labels, comments on, and closes issues
 └── Leader responds directly for simple questions
 ```
 
@@ -52,12 +53,15 @@ Compare branches against main, summarize what changed.
 - **Tools:** GitTools (git_fetch, git_branches, git_log, git_diff)
 - **Workflow:** fetch → confirm branch exists → log commits → diff stat → read key files → synthesize
 
-### 4. Triage Issues (Explorer)
+### 4. Manage Issues (Triager)
 
-Read open issues, understand them in context of the code, prioritize.
+Review, categorize, label, comment on, and close GitHub issues — backed
+by code investigation.
 
-- **Tools:** GithubTools (list_issues, get_issue, list_issue_comments, comment_on_issue)
-- Categorizes by effort/urgency, flags low-hanging fruit and stale items
+- **Tools:** GithubTools (list_issues, get_issue, create_issue, comment_on_issue, close_issue, reopen_issue, assign_issue, label_issue, edit_issue, list_issue_comments, search_issues_and_prs), CodingTools (read-only), GitTools (read-only), ReasoningTools
+- **Categories:** Major Bug, Bug, Low-Hanging Fruit, Enhancement, Question, Duplicate, Slop, Stale
+- **Actions:** Labels issues, posts constructive comments, closes slop/duplicates, flags priority items
+- **Examples:** "review the last 10 issues", "clean up issues on agno", "triage open bugs"
 
 ### 5. Write Code (Coder)
 
@@ -86,20 +90,15 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 
 ### 8. Daily Issue Triage
 
-Automated daily scan that replaces standalone issue bots. Runs as a
-lightweight pipeline — no team/agent delegation overhead.
+Automated daily scan that uses the Triager agent — the same agent that
+handles interactive issue management requests from Slack. This ensures the
+agent is continuously exercised and issues get labeled on GitHub.
 
-**Pipeline:** Fetch (GitHub API) → Classify (GPT-5.4) → Post (Slack SDK)
+**Pipeline:** Fetch (GitHub API) → Triage (Triager agent) → Post (Slack SDK)
 
-**Categories:**
-- **MAJOR_BUG** — crashes, data loss, security vulnerabilities, regressions
-- **LOW_HANGING_FRUIT** — quick wins: typos, small fixes, good first issues
-- **SLOP** — AI-generated low-quality issues (vague, no repro, generic suggestions)
-- **OTHER** — feature requests, questions, discussions (not posted to Slack)
-
-**Slack output:** Posts to the channel set by `TRIAGE_CHANNEL` env var.
-Only surfaces Major Bugs, Low-Hanging Fruit, and Slop — skips Other.
-Includes clickable issue links and 1-line summaries.
+The Triager agent categorizes each issue, labels it on GitHub, and
+optionally comments with code-backed analysis. During automated runs
+it does **not** close or reopen issues — only categorizes, labels, and comments.
 
 **Schedule:** Daily at 4 AM UTC. Register with `python -m tasks.review_issues --schedule`.
 
@@ -111,9 +110,9 @@ Includes clickable issue links and 1-line summaries.
 - Requires `GITHUB_ACCESS_TOKEN` and `SLACK_TOKEN` (already required by Coda).
 - Repos are read from `repos.yaml` — all configured repos are triaged.
 
-**Extending:** To add new categories, update the `IssueClassification` Literal
-type and the classifier instructions in `tasks/review_issues.py`. To change
-the schedule, update the cron in the `__main__` block.
+**Extending:** To change categories or triage behavior, update the Triager
+agent instructions in `coda/agents/triager.py`. To change the schedule,
+update the cron in the `__main__` block of `tasks/review_issues.py`.
 
 ## Agents
 
@@ -124,6 +123,15 @@ the schedule, update the cron in the `__main__` block.
 - **Tools:** SlackTools (send_message, list_channels only)
 - **Features:** agentic memory, session history (5 past sessions, 10 history runs), learnings in context
 - **Routing:** see routing table in `coda/team.py` instructions
+
+### Triager
+
+- **Role:** Review, categorize, label, and manage GitHub issues
+- **Tools:**
+  - CodingTools (read_file, grep, find, ls — no write/edit/shell)
+  - GitTools (read_only=True)
+  - GithubTools (list_issues, get_issue, create_issue, comment_on_issue, close_issue, reopen_issue, assign_issue, label_issue, edit_issue, list_issue_comments, search_issues_and_prs, get_pull_request, get_pull_requests, get_pull_request_with_details, search_code)
+  - ReasoningTools (think)
 
 ### Explorer
 
@@ -194,7 +202,8 @@ coda/
 │   ├── settings.py      # Shared DB, REPOS_DIR, MODEL, learnings KB
 │   ├── agents/
 │   │   ├── coder.py     # Coder agent
-│   │   └── explorer.py  # Explorer agent
+│   │   ├── explorer.py  # Explorer agent
+│   │   └── triager.py   # Triager agent
 │   └── tools/
 │       └── git.py       # GitTools toolkit
 ├── db/

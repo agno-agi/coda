@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN git config --system init.defaultBranch main \
     && git config --system user.name "Coda" \
     && git config --system user.email "coda@agno.com" \
-    && git config --system advice.detachedHead false
+    && git config --system advice.detachedHead false \
+    && git config --system --add safe.directory '*'
 
 # ---------------------------------------------------------------------------
 # Application code

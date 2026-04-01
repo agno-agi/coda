@@ -168,14 +168,15 @@ Coda pulls PR details, reads the changed files, diffs them against your conventi
 @Coda compare this branch against main
 ```
 
-### Triage Issues
+### Manage Issues
 
-Coda reads your open issues and understands them in the context of the actual code. Ask it what's worth working on, or let it tell you.
+Coda doesn't just read issues — it acts on them. It categorizes, labels, comments with code-backed analysis, flags duplicates, and closes junk. Ask it to review a batch and it'll triage the whole backlog.
 
 ```
-@Coda what are the open issues?
-@Coda which of these issues can we tackle quickly?
-@Coda review the top 10 open issues and summarize them
+@Coda review the last 10 issues on agno, let's wrap em up
+@Coda triage the open issues and label them
+@Coda clean up the stale issues
+@Coda what are the open bugs? label them and flag the critical ones
 ```
 
 ### Stay on Top of Things
@@ -184,7 +185,7 @@ Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the
 
 **Daily Digest** — every morning, Coda posts a summary of your repositories: what merged yesterday, what PRs are waiting for review, what issues were opened, and what's gone stale. Like a standup that writes itself.
 
-**Issue Triage** — on a schedule, Coda reviews your open issues against the actual codebase, categorizes them by effort and urgency, and posts recommendations: here's what's low-hanging, here's what's complex, here's what the code already does nearby.
+**Issue Triage** — on a schedule, Coda's Triager agent reviews your open issues against the actual codebase, categorizes them, labels them on GitHub, and posts a summary to Slack. The same agent that handles interactive triage requests runs the daily scan — so you know it works.
 
 **Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
 
@@ -234,6 +235,11 @@ Slack → Coda (Team Leader, Coordinate)
         │   ├─ GitTools (log/diff/blame/show)
         │   ├─ GithubTools (PR read/review, code search)
         │   └─ ReasoningTools (think/analyze)
+        ├─ Triager Agent
+        │   ├─ CodingTools (read-only: read/grep/find/ls)
+        │   ├─ GitTools (log/diff/blame/show)
+        │   ├─ GithubTools (issues: label/comment/close/search)
+        │   └─ ReasoningTools (think/analyze)
         ├─ SlackTools (notifications, leader only)
         ├─ LearningMachine (conventions/patterns, shared)
         └─ Agentic Memory (user context, leader only)
@@ -275,5 +281,56 @@ python -m evals.run_evals --category security
 | `DB_PASS` | No | PostgreSQL password (default: ai) |
 | `DB_DATABASE` | No | PostgreSQL database (default: ai) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
+| `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
+
+## Running Local + Production
+
+If Coda is already deployed (e.g. on Railway), you can run a second instance locally for development. The key constraint is that each Slack app can only deliver events to one URL, so you need a separate Slack app for local.
+
+### 1. Create a "Coda Dev" Slack app
+
+Follow the same steps in [docs/SLACK_CONNECT.md](docs/SLACK_CONNECT.md), but create a new app (e.g. "Coda Dev") in your workspace. You'll get a separate bot token and signing secret.
+
+### 2. Set up a local env file
+
+```bash
+cp .env .env.local
+```
+
+Edit `.env.local` and replace the Slack credentials with the ones from your "Coda Dev" app:
+
+```bash
+# .env.local — local development
+SLACK_TOKEN=xoxb-***-dev-token
+SLACK_SIGNING_SECRET=***-dev-secret
+
+# These can stay the same as production
+OPENAI_API_KEY=sk-***
+GITHUB_ACCESS_TOKEN=github_pat_***
+```
+
+### 3. Expose localhost to Slack
+
+Slack needs a public URL to send events to. Use [ngrok](https://ngrok.com):
+
+```bash
+ngrok http 8000
+```
+
+Copy the `https://...ngrok.io` URL. In your "Coda Dev" Slack app settings, set the Request URL to:
+
+```
+https://<your-id>.ngrok-free.app/slack/events
+```
+
+### 4. Run locally
+
+```bash
+docker compose --env-file .env.local up -d --build
+```
+
+Your production instance on Railway continues to run with `.env` and the production Slack app. Your local instance runs with `.env.local` and the dev Slack app. Both work independently.
+
+> **Tip:** Add `.env.local` to `.gitignore` if it isn't already. Never commit either env file.
 
 <p align="center">Built on <a href="https://github.com/agno-agi/agno">Agno</a> · the runtime for agentic software</p>

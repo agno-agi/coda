@@ -7,7 +7,7 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 ## Architecture
 
 - Team definition: `coda/team.py` (Coda team leader, Coordinate mode)
-- Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer)
+- Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer), `coda/agents/triager.py` (Triager)
 - Shared settings: `coda/settings.py` (DB, REPOS_DIR, learnings KB)
 - API server: `app/main.py` (FastAPI + AgentOS + Slack interface)
 - Custom tools: `coda/tools/git.py` (GitTools)
@@ -19,19 +19,21 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 ```
 Coda (Team, Coordinate, gpt-5.4)
 ├── Coder — writes code in worktrees, opens PRs
-├── Explorer — searches code, traces flows, reviews PRs/branches, triages issues (read-only)
+├── Explorer — searches code, traces flows, reviews PRs/branches (read-only)
+├── Triager — categorizes, labels, comments on, and closes issues
 └── [leader responds directly for greetings/simple questions]
 ```
 
 - **Coda (leader):** Triages requests, delegates to specialists, synthesizes results
 - **Coder:** CodingTools (full), GitTools, GithubTools (write), ReasoningTools
 - **Explorer:** CodingTools (read-only), GitTools, GithubTools (read-only), ReasoningTools
+- **Triager:** CodingTools (read-only), GitTools (read-only), GithubTools (issue management), ReasoningTools
 
 All agents share the same `coda_learnings` knowledge base via individual LearningMachine instances.
 
 ## Key Concepts
 
-- **Coordinate mode:** Leader picks the right specialist, delegates with context, synthesizes results
+- **Coordinate mode:** Leader picks the right specialist, delegates with context, synthesizes results. Triager handles issue management; Explorer handles code exploration and PR review; Coder handles code changes.
 - **CodingTools:** file read/write/edit, shell, grep, find, ls (Coder: all=True, Explorer: read-only)
 - **GitTools:** git log/diff/blame/show, repo listing, branch listing/diffing, worktree lifecycle (create/list/remove), safe push (coda/* only)
 - **GithubTools:** Agno built-in — PR read/review/create/comment, issues read/comment, code search (scoped via include_tools)
@@ -40,7 +42,7 @@ All agents share the same `coda_learnings` knowledge base via individual Learnin
 - **Agentic Memory:** tracks user preferences and observations (team-level only)
 - **Worktrees:** each coding task gets a `coda/*` branch via `git worktree add`
 - **Scheduled Tasks:** repo sync (every 5 min), daily issue triage (4 AM UTC)
-- **Daily Issue Triage:** standalone pipeline (fetch → classify → Slack), not via team agents. Categories: Major Bug, Low-Hanging Fruit, Slop, Other. Config: `TRIAGE_CHANNEL` env var.
+- **Daily Issue Triage:** uses the Triager agent (fetch → Triager agent → Slack). The same agent that handles interactive triage runs the daily scan — categorizes, labels, comments, but does NOT close issues during automated runs. Config: `TRIAGE_CHANNEL` env var.
 
 ## Structure
 ```
@@ -52,7 +54,8 @@ coda/
 │   ├── team.py           # Coda team definition (leader)
 │   ├── agents/
 │   │   ├── coder.py      # Coder agent
-│   │   └── explorer.py   # Explorer agent
+│   │   ├── explorer.py   # Explorer agent
+│   │   └── triager.py    # Triager agent
 │   ├── settings.py       # Shared DB, paths, knowledge
 │   └── tools/
 │       └── git.py        # GitTools toolkit
