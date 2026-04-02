@@ -66,6 +66,9 @@ Use your deployed URL (e.g. `https://coda.yourdomain.com`).
                 "im:history",
                 "im:read",
                 "im:write",
+                "search:read.public",
+                "search:read.files",
+                "search:read.users",
                 "users:read",
                 "users:read.email"
             ]
