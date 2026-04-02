@@ -20,4 +20,5 @@ CATEGORIES: dict[str, dict] = {
     "exploration": {"type": "accuracy", "module": "evals.cases.exploration"},
     "synthesis": {"type": "judge_numeric", "module": "evals.cases.synthesis"},
     "refusal": {"type": "judge_binary", "module": "evals.cases.refusal"},
+    "slack_context": {"type": "judge_binary", "module": "evals.cases.slack_context"},
 }

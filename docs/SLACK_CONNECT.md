@@ -1,6 +1,6 @@
 # Connecting Coda to Slack
 
-Coda is designed to live in Slack. Each Slack thread becomes a session with its own conversation context.
+Coda is designed to live in Slack. Each Slack thread becomes a session with its own conversation context, and Coda preserves the original Slack source metadata for that session so follow-ups continued from another channel/thread can still resolve back to where the task started.
 
 ## Prerequisites
 
@@ -137,7 +137,7 @@ what repos are available?
 @Coda walk me through the auth flow
 ```
 
-Each thread maintains its own conversation context automatically. Follow-up messages in the same thread don't need to mention @Coda again.
+Each thread maintains its own conversation context automatically. Follow-up messages in the same thread don't need to mention @Coda again. If someone continues the task from another Slack channel/thread, Coda keeps the original source channel/thread metadata pinned to the session so context lookup can still resolve back to the task's starting point.
 
 ## How It Works
 
@@ -150,7 +150,13 @@ Slack(
     team=coda,
     token=SLACK_TOKEN,
     signing_secret=SLACK_SIGNING_SECRET,
+    session_state={
+        "slack_origin_channel_id": "channel_id",
+        "slack_origin_thread_ts": "thread_ts",
+        "slack_origin_message_ts": "message_ts",
+    },
+    preserve_session_state=True,
 )
 ```
 
-Thread timestamps are used as session IDs, so each Slack thread is an independent conversation with full history.
+Thread timestamps are used as session IDs, and the original Slack source metadata is preserved in session state so cross-channel continuations can still refer back to the channel/thread where the task began.

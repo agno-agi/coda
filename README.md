@@ -119,7 +119,7 @@ walk me through the auth flow
 @Coda what are the open PRs?
 ```
 
-Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again.
+Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again. If a task gets continued from another Slack channel/thread, Coda keeps the original source channel/thread metadata attached to the session so it can keep using the context from where the task started.
 
 ### 7. Deploy to your cloud provider
 

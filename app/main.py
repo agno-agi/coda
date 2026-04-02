@@ -43,6 +43,12 @@ if SLACK_TOKEN and SLACK_SIGNING_SECRET:
             token=SLACK_TOKEN,
             signing_secret=SLACK_SIGNING_SECRET,
             resolve_user_identity=True,
+            session_state={
+                "slack_origin_channel_id": "channel_id",
+                "slack_origin_thread_ts": "thread_ts",
+                "slack_origin_message_ts": "message_ts",
+            },
+            preserve_session_state=True,
         )
     )
 
