@@ -41,6 +41,8 @@ services:
       # API keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-}
+      # Web research (optional)
+      - PARALLEL_API_KEY=${PARALLEL_API_KEY:-}
       # Slack
       - SLACK_TOKEN=${SLACK_TOKEN:-}
       - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}

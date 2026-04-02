@@ -7,7 +7,7 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 ## Architecture
 
 - Team definition: `coda/team.py` (Coda team leader, Coordinate mode)
-- Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer), `coda/agents/triager.py` (Triager)
+- Member agents: `coda/agents/coder.py` (Coder), `coda/agents/explorer.py` (Explorer), `coda/agents/planner.py` (Planner), `coda/agents/researcher.py` (Researcher), `coda/agents/triager.py` (Triager)
 - Shared settings: `coda/settings.py` (DB, REPOS_DIR, learnings KB)
 - API server: `app/main.py` (FastAPI + AgentOS + Slack interface)
 - Custom tools: `coda/tools/git.py` (GitTools)
@@ -20,6 +20,8 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 Coda (Team, Coordinate, gpt-5.4)
 ├── Coder — writes code in worktrees, opens PRs
 ├── Explorer — searches code, traces flows, reviews PRs/branches (read-only)
+├── Planner — breaks feature requests into ordered GitHub issues
+├── Researcher — searches the web for docs, errors, APIs, best practices
 ├── Triager — categorizes, labels, comments on, and closes issues
 └── [leader responds directly for greetings/simple questions]
 ```
@@ -27,6 +29,8 @@ Coda (Team, Coordinate, gpt-5.4)
 - **Coda (leader):** Triages requests, delegates to specialists, synthesizes results
 - **Coder:** CodingTools (full), GitTools, GithubTools (write), ReasoningTools
 - **Explorer:** CodingTools (read-only), GitTools, GithubTools (read-only), ReasoningTools
+- **Planner:** CodingTools (read-only), GitTools (read-only), GithubTools (issue creation), ReasoningTools
+- **Researcher:** ParallelTools (web search + extract), ReasoningTools
 - **Triager:** CodingTools (read-only), GitTools (read-only), GithubTools (issue management), ReasoningTools
 
 All agents share the same `coda_learnings` knowledge base via individual LearningMachine instances.
@@ -54,9 +58,11 @@ coda/
 ├── coda/
 │   ├── team.py           # Coda team definition (leader)
 │   ├── agents/
-│   │   ├── coder.py      # Coder agent
-│   │   ├── explorer.py   # Explorer agent
-│   │   └── triager.py    # Triager agent
+│   │   ├── coder.py       # Coder agent
+│   │   ├── explorer.py    # Explorer agent
+│   │   ├── planner.py     # Planner agent
+│   │   ├── researcher.py  # Researcher agent
+│   │   └── triager.py     # Triager agent
 │   ├── settings.py       # Shared DB, paths, knowledge
 │   └── tools/
 │       └── git.py        # GitTools toolkit
@@ -127,6 +133,7 @@ python -m evals.run --verbose            # Show details
 | `SLACK_TOKEN` | No | Slack bot token |
 | `SLACK_SIGNING_SECRET` | No | Slack request verification |
 | `DB_*` | No | Database config (defaults to localhost) |
+| `PARALLEL_API_KEY` | No | Parallel API key for web research (Researcher agent) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos in Docker) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage (e.g. `C0ADMCGSJ8H`) |
 | `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |

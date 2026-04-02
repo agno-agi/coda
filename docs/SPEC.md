@@ -10,6 +10,8 @@ Coda is a code companion that lives in Slack. Helps engineering teams understand
 Coda (Team leader, Coordinate mode, gpt-5.4)
 ├── Coder — writes code in isolated worktrees, opens PRs
 ├── Explorer — searches code, reviews PRs/branches (read-only)
+├── Planner — breaks feature requests into ordered GitHub issues
+├── Researcher — searches the web for docs, errors, APIs, best practices
 ├── Triager — categorizes, labels, comments on, and closes issues
 └── Leader responds directly for simple questions
 ```
@@ -71,7 +73,25 @@ Build features, fix bugs, write tests in isolated git worktrees.
 - **Workflow:** explore on main clone → create worktree → plan → edit → verify (run tests) → commit → push (via git_push) → open PR → check CI
 - Never touches main. Each task gets a `coda/<task-name>` branch.
 
-### 6. Learn Over Time (All agents)
+### 6. Plan Work (Planner)
+
+Break feature requests and high-level goals into ordered, well-scoped
+GitHub issues with code context, labels, and dependencies.
+
+- **Tools:** CodingTools (read-only), GitTools (read-only), GithubTools (create_issue, label_issue, list_issues, search_issues_and_prs, search_code), ReasoningTools
+- **Examples:** "plan webhook support for payments", "break down the auth rewrite into issues"
+- Creates 3-7 ordered issues per plan, each with description, code pointers, and labels
+
+### 7. Web Research (Researcher)
+
+Search the web for documentation, error explanations, library APIs,
+security advisories, release notes, and best practices.
+
+- **Tools:** ParallelTools (parallel_search, parallel_extract), ReasoningTools
+- **Examples:** "what changed in v2.0", "what does this error mean", "best practice for X"
+- Returns answers with source URLs for verification
+
+### 8. Learn Over Time (All agents)
 
 Picks up coding standards, conventions, patterns from interactions.
 
@@ -80,7 +100,7 @@ Picks up coding standards, conventions, patterns from interactions.
 - **Namespace:** "global" (shared across all agents)
 - **Categories:** convention, architecture, gotcha, preference, process
 
-### 7. Scheduled Tasks
+### 9. Scheduled Tasks
 
 Background tasks on a cron schedule via Agno ScheduleManager.
 
@@ -89,7 +109,7 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 - **Daily digest:** morning activity summary — merged PRs, open PRs, new/stale issues (`POST /digest`)
 - **Startup sync:** repos are synced on application startup
 
-### 8. Daily Issue Triage
+### 10. Daily Issue Triage
 
 Automated daily scan that uses the Triager agent — the same agent that
 handles interactive issue management requests from Slack. This ensures the
@@ -115,7 +135,7 @@ it does **not** close or reopen issues — only categorizes, labels, and comment
 agent instructions in `coda/agents/triager.py`. To change the schedule,
 update the cron in the `__main__` block of `tasks/review_issues.py`.
 
-### 9. Daily Digest
+### 11. Daily Digest
 
 Morning summary posted to Slack: merged PRs, open PRs waiting for
 review, new issues, and stale issues. Pure GitHub API — no agent involved.
@@ -163,6 +183,22 @@ review, new issues, and stale issues. Pure GitHub API — no agent involved.
   - CodingTools (read_file, grep, find, ls — no write/edit/shell)
   - GitTools (read_only=True — log, diff, blame, show, fetch, branches, list_repos, repo_summary, get_github_remote, list_worktrees)
   - GithubTools (get_pull_request, get_pull_requests, get_pull_request_changes, get_pull_request_comments, get_pull_request_with_details, create_pull_request_comment, get_issue, list_issues, list_issue_comments, comment_on_issue, list_branches, search_code)
+  - ReasoningTools (think)
+
+### Planner
+
+- **Role:** Break down feature requests into ordered, well-scoped GitHub issues
+- **Tools:**
+  - CodingTools (read_file, grep, find, ls — no write/edit/shell)
+  - GitTools (read_only=True)
+  - GithubTools (list_issues, get_issue, create_issue, label_issue, list_issue_comments, search_issues_and_prs, get_pull_requests, search_code)
+  - ReasoningTools (think)
+
+### Researcher
+
+- **Role:** Search the web for docs, errors, APIs, and best practices
+- **Tools:**
+  - ParallelTools (parallel_search, parallel_extract)
   - ReasoningTools (think)
 
 ### Coder
@@ -225,9 +261,11 @@ coda/
 │   ├── team.py          # Coda team definition (leader)
 │   ├── settings.py      # Shared DB, REPOS_DIR, MODEL, learnings KB
 │   ├── agents/
-│   │   ├── coder.py     # Coder agent
-│   │   ├── explorer.py  # Explorer agent
-│   │   └── triager.py   # Triager agent
+│   │   ├── coder.py       # Coder agent
+│   │   ├── explorer.py    # Explorer agent
+│   │   ├── planner.py     # Planner agent
+│   │   ├── researcher.py  # Researcher agent
+│   │   └── triager.py     # Triager agent
 │   └── tools/
 │       └── git.py       # GitTools toolkit
 ├── db/

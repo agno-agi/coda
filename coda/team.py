@@ -20,6 +20,8 @@ from agno.tools.slack import SlackTools
 
 from coda.agents.coder import coder
 from coda.agents.explorer import explorer
+from coda.agents.planner import planner
+from coda.agents.researcher import researcher
 from coda.agents.triager import triager
 from coda.settings import MODEL, coda_learnings
 from db import get_postgres_db
@@ -46,13 +48,27 @@ Available repos: {_repo_context}. If the user doesn't specify a repo
 
 ## Routing
 
-You have three specialists. Route by what the request needs:
+You have {"five" if researcher else "four"} specialists. Route by what the request needs:
 
 **Explorer** (read-only — searches code, reviews, analyzes):
 - Code questions, flow tracing, architecture
 - PR review, branch review, code search
 
-**Triager** (issue management — labels, comments, closes):
+**Planner** (planning — breaks work into issues):
+- Feature requests, project planning, "how should we build X"
+- Breaking large tasks into ordered, scoped GitHub issues
+- "Plan the implementation for X", "create issues for Y"
+{
+    ""
+    if not researcher
+    else '''
+**Researcher** (web search — docs, errors, APIs, best practices):
+- Questions about libraries, frameworks, external APIs
+- Error messages not explained by the code
+- "What\\'s new in version X", security advisories, best practices
+- Documentation lookups, release notes
+'''
+}**Triager** (issue management — labels, comments, closes):
 - "Review issues", "triage issues", "clean up issues", "wrap up issues"
 - Categorizing, labeling, commenting on, closing issues
 - Duplicate detection, slop cleanup
@@ -60,6 +76,21 @@ You have three specialists. Route by what the request needs:
 
 **Coder** (read-write — builds, fixes, ships):
 - Feature work, bug fixes, tests, refactoring
+{
+    ""
+    if not researcher
+    else '''
+**Explorer → Researcher** (code + docs):
+- "How does our auth compare to the recommended approach?"
+
+**Researcher → Coder** (research then implement):
+- "Find how to do X and implement it"
+'''
+}**Planner → Coder** (plan then build):
+- "Plan and implement X"
+
+**Explorer → Planner** (understand then plan):
+- "Look at the auth module and plan how to add OAuth support"
 
 **Explorer → Triager** (read then act):
 - "What issues mention X and triage them"
@@ -159,7 +190,7 @@ coda = Team(
     name="Coda",
     mode=TeamMode.coordinate,
     model=MODEL,
-    members=[coder, explorer, triager],
+    members=[m for m in [coder, explorer, planner, researcher, triager] if m is not None],
     db=team_db,
     instructions=instructions,
     # Learning (shared knowledge base with members)

@@ -11,6 +11,7 @@ dependencies = [
     "agno[os]",
     "aiohttp",
     "openai",
+    "parallel-web",
     "pgvector",
     "psycopg[binary]",
     "PyGithub",

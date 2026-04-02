@@ -203,6 +203,27 @@ For issue triage to post to Slack, set `TRIAGE_CHANNEL` in your env to the targe
 
 You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
 
+### Plan Work
+
+Drop a feature request in Slack and Coda breaks it down into ordered, well-scoped GitHub issues — each with descriptions, code pointers, labels, and dependencies.
+
+```
+@Coda plan out adding webhook support to the payments service
+@Coda break down the auth rewrite into implementable issues
+@Coda create issues for adding rate limiting across all API endpoints
+```
+
+### Research the Web
+
+When a question goes beyond the codebase — framework docs, library APIs, error messages, security advisories — Coda searches the web and brings back answers with sources.
+
+```
+@Coda what changed in FastAPI 0.135?
+@Coda what's the recommended way to handle rate limiting in Redis?
+@Coda are there known vulnerabilities in pyjwt 2.12?
+@Coda how does OpenAI's function calling work?
+```
+
 ### Write Code
 
 When you're ready, Coda writes code in isolated git worktrees and opens PRs. Your main branch is never touched.
@@ -246,6 +267,14 @@ Slack → Coda (Team Leader, Coordinate)
         │   ├─ CodingTools (read-only: read/grep/find/ls)
         │   ├─ GitTools (log/diff/blame/show)
         │   ├─ GithubTools (PR read/review, code search)
+        │   └─ ReasoningTools (think/analyze)
+        ├─ Planner Agent
+        │   ├─ CodingTools (read-only: read/grep/find/ls)
+        │   ├─ GitTools (log/diff/blame/show)
+        │   ├─ GithubTools (issues: create/label/search)
+        │   └─ ReasoningTools (think/analyze)
+        ├─ Researcher Agent
+        │   ├─ ParallelTools (web search/extract)
         │   └─ ReasoningTools (think/analyze)
         ├─ Triager Agent
         │   ├─ CodingTools (read-only: read/grep/find/ls)
@@ -291,6 +320,7 @@ python -m evals.run --category security
 | `DB_USER` | No | PostgreSQL user (default: ai) |
 | `DB_PASS` | No | PostgreSQL password (default: ai) |
 | `DB_DATABASE` | No | PostgreSQL database (default: ai) |
+| `PARALLEL_API_KEY` | No | Parallel API key for web research ([parallel.ai](https://parallel.ai)) |
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
 | `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |

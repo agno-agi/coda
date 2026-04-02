@@ -90,6 +90,7 @@ railway add -s coda \
     -v "REPOS_DIR=/repos" \
     -v "OPENAI_API_KEY=${OPENAI_API_KEY}" \
     -v "GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-}" \
+    -v "PARALLEL_API_KEY=${PARALLEL_API_KEY:-}" \
     -v "SLACK_TOKEN=${SLACK_TOKEN:-}" \
     -v "SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET:-}" \
     -v "TRIAGE_CHANNEL=${TRIAGE_CHANNEL:-}" \
