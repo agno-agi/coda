@@ -57,11 +57,14 @@ Use your deployed URL (e.g. `https://coda.yourdomain.com`).
         "scopes": {
             "bot": [
                 "app_mentions:read",
+                "assistant:write",
                 "channels:history",
                 "channels:read",
                 "chat:write",
                 "chat:write.customize",
                 "chat:write.public",
+                "files:read",
+                "files:write",
                 "groups:history",
                 "im:history",
                 "im:read",
