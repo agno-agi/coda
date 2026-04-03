@@ -151,7 +151,7 @@ If you were using ngrok for local development, you can stop it now — Slack wil
 
 ### 8. Secure your deployment
 
-Production requires RBAC authentication via AgentOS. See [Security](#security) below for setup — you'll need to connect your OS at [os.agno.com](https://os.agno.com) and add a `JWT_VERIFICATION_KEY` to your environment.
+Production requires RBAC authentication via AgentOS. See [Security](#security) below for setup — you'll need to connect your OS at [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and add a `JWT_VERIFICATION_KEY` to your environment.
 
 ## What Coda Can Do
 
@@ -324,18 +324,18 @@ python -m evals.run --category security
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
 | `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |
-| `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com) |
+| `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) |
 
 ## Security
 
-Production deployments require authentication via [Agno AgentOS](https://docs.agno.com/agent-os/security/overview). This is enforced automatically — Coda enables [RBAC authorization](https://docs.agno.com/agent-os/security/rbac) when `RUNTIME_ENV=prd` (the default). Without a valid `JWT_VERIFICATION_KEY`, production endpoints will reject all requests.
+Production deployments require authentication via [Agno AgentOS](https://docs.agno.com/agent-os/security/overview?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=security). This is enforced automatically — Coda enables [RBAC authorization](https://docs.agno.com/agent-os/security/rbac?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=rbac) when `RUNTIME_ENV=prd` (the default). Without a valid `JWT_VERIFICATION_KEY`, production endpoints will reject all requests.
 
 Local development (`RUNTIME_ENV=dev`, set by Docker Compose) runs without auth so you can iterate freely.
 
 ### Setup
 
 1. Deploy Coda to your cloud provider (step 7 above)
-2. Open [os.agno.com](https://os.agno.com) and connect your deployed OS
+2. Open [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and connect your deployed OS
 3. Go to **Settings** and generate a key pair
 4. Add the public key to your `.env` (paste the full PEM block, no quotes needed):
 
