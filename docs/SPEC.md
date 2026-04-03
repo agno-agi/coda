@@ -107,6 +107,7 @@ Background tasks on a cron schedule via Agno ScheduleManager.
 - **Repo sync:** pulls latest changes every 5 minutes (`POST /sync`)
 - **Daily issue triage:** classifies new issues and posts to Slack (`POST /triage-issues`)
 - **Daily digest:** morning activity summary — merged PRs, open PRs, new/stale issues (`POST /digest`)
+- **Proactive Agno post:** every 30 minutes, posts a repo-grounded Agno update to Slack or a configured thread (`POST /proactive-agno-post`)
 - **Startup sync:** repos are synced on application startup
 
 ### 10. Daily Issue Triage
@@ -156,6 +157,30 @@ review, new issues, and stale issues. Pure GitHub API — no agent involved.
 - Set `DIGEST_CHANNEL` to the Slack channel ID.
 - Requires `GITHUB_ACCESS_TOKEN` and `SLACK_TOKEN`.
 - Repos are read from `repos.yaml`.
+
+### 12. Proactive Agno Post
+
+Half-hour Slack update grounded in the `agno` repository. The task prefers
+recent merged PRs, then active open PRs, then local git commits, and finally a
+real file spotlight from the local repo clone so it never falls back to generic filler.
+
+**Pipeline:** Fetch (GitHub API + local git) → Select → Dedupe → Format → Post (Slack SDK)
+
+**Behavior:**
+- Targets one configured repo (default: `agno`)
+- Posts to Slack channel `C09GL0WK0SU` by default
+- Supports optional thread replies via `PROACTIVE_POST_THREAD_TS`
+- Stores a lightweight fingerprint in `/repos/.coda-state/` to avoid repeating the same signal in the same 30-minute bucket
+
+**Schedule:** Every 30 minutes UTC. Register with `python -m tasks.proactive_agno_post --schedule`.
+
+**Manual trigger:** `POST /proactive-agno-post` or `python -m tasks.proactive_agno_post`.
+
+**Configuration:**
+- Set `PROACTIVE_POST_ENABLED=true` to register and run it
+- Set `PROACTIVE_POST_CHANNEL` to the Slack channel ID
+- Set `PROACTIVE_POST_THREAD_TS` to reply in a thread instead of top-level posting
+- Set `PROACTIVE_POST_REPO` to change the source repo (defaults to `agno`)
 
 ## Agents
 

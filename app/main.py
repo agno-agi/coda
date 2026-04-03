@@ -17,6 +17,7 @@ from agno.os import AgentOS
 from coda.team import coda
 from db import get_postgres_db
 from tasks.daily_digest import run_daily_digest
+from tasks.proactive_agno_post import run_proactive_agno_post
 from tasks.review_issues import run_daily_triage
 from tasks.sync_repos import sync_all_repos
 
@@ -81,6 +82,15 @@ def _register_schedules() -> None:
             description="Daily activity digest — merged PRs, open PRs, new/stale issues",
             if_exists="update",
         )
+    if getenv("PROACTIVE_POST_ENABLED", "false").lower() == "true" and getenv("SLACK_TOKEN"):
+        mgr.create(
+            name="proactive-agno-post",
+            cron="*/30 * * * *",
+            endpoint="/proactive-agno-post",
+            timezone="UTC",
+            description="Proactive Agno Slack update every 30 minutes",
+            if_exists="update",
+        )
 
 
 @asynccontextmanager
@@ -130,6 +140,13 @@ def triage_issues() -> dict[str, str]:
 def daily_digest() -> dict[str, str]:
     """Run daily activity digest — merged PRs, open PRs, new/stale issues."""
     run_daily_digest()
+    return {"status": "ok"}
+
+
+@app.post("/proactive-agno-post")
+def proactive_agno_post() -> dict[str, str]:
+    """Run proactive Agno posting from recent repo activity or repo spotlight."""
+    run_proactive_agno_post()
     return {"status": "ok"}
 
 

@@ -197,9 +197,11 @@ Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the
 
 **Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
 
-Schedules are registered automatically on app startup — no manual setup needed. They're idempotent, so restarting the app just updates existing schedules. To trigger a triage manually: `POST /triage-issues`.
+**Proactive Agno Post** — every 30 minutes, Coda posts a short Agno update grounded in recent repo activity (merged PRs, open PRs, commits) or a concrete file spotlight from the local `agno` clone. It supports posting directly to a channel or replying inside a configured Slack thread.
 
-For issue triage to post to Slack, set `TRIAGE_CHANNEL` in your env to the target channel ID (right-click channel in Slack → View details → copy ID).
+Schedules are registered automatically on app startup — no manual setup needed. They're idempotent, so restarting the app just updates existing schedules. Manual triggers: `POST /triage-issues`, `POST /digest`, and `POST /proactive-agno-post`.
+
+For issue triage to post to Slack, set `TRIAGE_CHANNEL` in your env to the target channel ID (right-click channel in Slack → View details → copy ID). For proactive Agno posts, set `PROACTIVE_POST_ENABLED=true`, `PROACTIVE_POST_CHANNEL=C09GL0WK0SU`, and optionally `PROACTIVE_POST_THREAD_TS=1775243740.375219` to keep updates in-thread.
 
 You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
 
@@ -324,6 +326,10 @@ python -m evals.run --category security
 | `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
 | `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
 | `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |
+| `PROACTIVE_POST_ENABLED` | No | Enables the 30-minute proactive Agno Slack post schedule |
+| `PROACTIVE_POST_CHANNEL` | No | Slack channel ID for proactive Agno posts |
+| `PROACTIVE_POST_THREAD_TS` | No | Optional Slack thread timestamp for in-thread proactive posts |
+| `PROACTIVE_POST_REPO` | No | Repo name to source proactive updates from (default: `agno`) |
 | `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) |
 
 ## Security
