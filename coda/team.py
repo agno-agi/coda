@@ -179,7 +179,6 @@ if getenv("SLACK_TOKEN"):
             enable_get_thread=True,
             enable_get_user_info=True,
             enable_search_messages=True,
-            enable_search_workspace=True,
             enable_list_users=True,
         )
     )
