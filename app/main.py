@@ -14,6 +14,11 @@ from pathlib import Path
 
 from agno.os import AgentOS
 
+from coda.agents.coder import coder
+from coda.agents.explorer import explorer
+from coda.agents.planner import planner
+from coda.agents.researcher import researcher
+from coda.agents.triager import triager
 from coda.team import coda
 from db import get_postgres_db
 from tasks.daily_digest import run_daily_digest
@@ -101,6 +106,7 @@ agent_os = AgentOS(
     scheduler_base_url=scheduler_base_url,
     db=get_postgres_db(),
     teams=[coda],
+    agents=[explorer, researcher, coder, planner, triager],
     interfaces=interfaces,
     config=str(Path(__file__).parent / "config.yaml"),
     lifespan=lifespan,
