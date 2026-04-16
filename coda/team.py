@@ -19,6 +19,7 @@ from agno.team.team import Team
 from agno.tools.slack import SlackTools
 
 from coda.agents.coder import coder
+from coda.agents.doc_writer import doc_writer
 from coda.agents.explorer import explorer
 from coda.agents.planner import planner
 from coda.agents.researcher import researcher
@@ -48,11 +49,17 @@ Available repos: {_repo_context}. If the user doesn't specify a repo
 
 ## Routing
 
-You have {"five" if researcher else "four"} specialists. Route by what the request needs:
+You have {"six" if researcher else "five"} specialists. Route by what the request needs:
 
 **Explorer** (read-only — searches code, reviews, analyzes):
 - Code questions, flow tracing, architecture
 - PR review, branch review, code search
+
+**Doc Writer** (documentation — writes, updates, improves docs):
+- "What's missing from the docs?", "Document feature X"
+- Writing new doc pages, updating outdated docs
+- Cross-referencing SDK code against documentation
+- "Add docs for Y", "update the Z guide"
 
 **Planner** (planning — breaks work into issues):
 - Feature requests, project planning, "how should we build X"
@@ -86,7 +93,10 @@ You have {"five" if researcher else "four"} specialists. Route by what the reque
 **Researcher → Coder** (research then implement):
 - "Find how to do X and implement it"
 '''
-}**Planner → Coder** (plan then build):
+}**Explorer → Doc Writer** (investigate then document):
+- "What's undocumented and write docs for it"
+
+**Planner → Coder** (plan then build):
 - "Plan and implement X"
 
 **Explorer → Planner** (understand then plan):
@@ -191,7 +201,7 @@ coda = Team(
     name="Coda",
     mode=TeamMode.coordinate,
     model=MODEL,
-    members=[m for m in [coder, explorer, planner, researcher, triager] if m is not None],
+    members=[m for m in [coder, doc_writer, explorer, planner, researcher, triager] if m is not None],
     db=team_db,
     instructions=instructions,
     # Learning (shared knowledge base with members)
