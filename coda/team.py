@@ -7,16 +7,33 @@ The leader triages requests and delegates to specialized agents:
 Explorer for code search/analysis, Triager for issue management,
 Coder for writing code.
 
+Context Providers:
+- SlackContextProvider: Search Slack workspace history
+- MCPContextProvider: Connect to external MCP servers (optional)
+
 Test:
     python -m coda
 """
 
 from os import getenv
+from typing import TYPE_CHECKING, Optional
 
+from agno.context.slack import SlackContextProvider
 from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
+from agno.models.openai import OpenAIResponses
 from agno.team.mode import TeamMode
 from agno.team.team import Team
 from agno.tools.slack import SlackTools
+
+# MCP is optional - only import if the mcp package is installed
+try:
+    from agno.context.mcp import MCPContextProvider
+
+    _MCP_AVAILABLE = True
+except ImportError:
+    _MCP_AVAILABLE = False
+    if TYPE_CHECKING:
+        from agno.context.mcp import MCPContextProvider
 
 from coda.agents.coder import coder
 from coda.agents.explorer import explorer
@@ -36,6 +53,41 @@ team_db = get_postgres_db()
 _repos = load_repos_config()
 _repo_names = [url.rstrip("/").split("/")[-1].removesuffix(".git") for r in _repos if (url := r.get("url"))]
 _repo_context = ", ".join(_repo_names) if _repo_names else "none configured"
+
+# Sub-agent model for context providers (cheaper model for tool work)
+_provider_model = OpenAIResponses(id="gpt-4o-mini")
+
+# ---------------------------------------------------------------------------
+# Context Providers
+# ---------------------------------------------------------------------------
+
+# SlackContextProvider: Search Slack workspace history
+# Adds query_slack tool for natural language workspace queries
+slack_context: Optional[SlackContextProvider] = None
+if getenv("SLACK_TOKEN") or getenv("SLACK_BOT_TOKEN"):
+    try:
+        slack_context = SlackContextProvider(
+            id="slack",
+            name="Slack Workspace",
+            model=_provider_model,
+        )
+    except ValueError:
+        pass
+
+# MCPContextProvider: Connect to external MCP servers
+# Configure via MCP_SERVER_COMMAND (e.g., "uvx mcp-server-time")
+# Requires: pip install mcp
+mcp_context: Optional["MCPContextProvider"] = None
+_mcp_command = getenv("MCP_SERVER_COMMAND")
+if _MCP_AVAILABLE and _mcp_command:
+    _mcp_parts = _mcp_command.split()
+    mcp_context = MCPContextProvider(
+        server_name=getenv("MCP_SERVER_NAME", "mcp"),
+        transport="stdio",
+        command=_mcp_parts[0],
+        args=_mcp_parts[1:] if len(_mcp_parts) > 1 else None,
+        model=_provider_model,
+    )
 
 # ---------------------------------------------------------------------------
 # Instructions
@@ -171,6 +223,8 @@ debugging a production issue, playful in #chitchat.
 # Tools (leader-only)
 # ---------------------------------------------------------------------------
 tools: list = []
+
+# SlackTools for direct Slack operations (posting, reading threads)
 if getenv("SLACK_TOKEN"):
     tools.append(
         SlackTools(
@@ -183,9 +237,28 @@ if getenv("SLACK_TOKEN"):
         )
     )
 
+# Context provider tools
+if slack_context:
+    tools.extend(slack_context.get_tools())
+if mcp_context:
+    tools.extend(mcp_context.get_tools())
+
+# Build context provider instructions
+_context_instructions: list[str] = []
+if slack_context:
+    _context_instructions.append(slack_context.instructions())
+if mcp_context:
+    _context_instructions.append(mcp_context.instructions())
+_context_guidance = "\n\n".join(_context_instructions) if _context_instructions else ""
+
 # ---------------------------------------------------------------------------
 # Create Team
 # ---------------------------------------------------------------------------
+# Combine base instructions with context provider guidance
+_full_instructions = instructions
+if _context_guidance:
+    _full_instructions = f"{instructions}\n\n## Context Tools\n\n{_context_guidance}"
+
 coda = Team(
     id="coda",
     name="Coda",
@@ -193,7 +266,7 @@ coda = Team(
     model=MODEL,
     members=[m for m in [coder, explorer, planner, researcher, triager] if m is not None],
     db=team_db,
-    instructions=instructions,
+    instructions=_full_instructions,
     # Learning (shared knowledge base with members)
     learning=LearningMachine(
         knowledge=coda_learnings,
@@ -216,3 +289,18 @@ coda = Team(
     add_datetime_to_context=True,
     markdown=True,
 )
+
+
+# ---------------------------------------------------------------------------
+# Context Provider Lifecycle (for MCP)
+# ---------------------------------------------------------------------------
+async def setup_context_providers() -> None:
+    """Set up async context providers. Call from app lifespan startup."""
+    if mcp_context:
+        await mcp_context.asetup()
+
+
+async def teardown_context_providers() -> None:
+    """Tear down async context providers. Call from app lifespan shutdown."""
+    if mcp_context:
+        await mcp_context.aclose()
