@@ -66,7 +66,8 @@ def run_judge_cases(
             duration = round(time.time() - start, 2)
 
             eval_result = judge.run(input=question, output=response)
-            passed = eval_result is not None and eval_result.pass_rate == 1.0
+            # pass_rate is a percentage (0-100), not a decimal
+            passed = eval_result is not None and eval_result.pass_rate >= 100.0
 
             result: dict = {
                 "question": question,
