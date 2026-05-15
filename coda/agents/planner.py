@@ -120,6 +120,7 @@ planner = Agent(
                 # Code search
                 "search_code",
             ],
+            requires_confirmation_tools=["create_issue"],
         ),
         ReasoningTools(),
     ],
