@@ -23,7 +23,7 @@ from coda.team import coda
 from db import get_postgres_db
 from tasks.daily_digest import run_daily_digest
 
-# from tasks.review_issues import run_daily_triage
+from tasks.review_issues import run_daily_triage
 from tasks.sync_repos import sync_all_repos
 
 # ---------------------------------------------------------------------------
@@ -69,15 +69,15 @@ def _register_schedules() -> None:
         description="Sync all configured repos every 5 minutes",
         if_exists="update",
     )
-    # if getenv("TRIAGE_CHANNEL") and getenv("SLACK_TOKEN"):
-    #     mgr.create(
-    #         name="daily-issue-triage",
-    #         cron="0 4 * * *",
-    #         endpoint="/triage-issues",
-    #         timezone="UTC",
-    #         description="Daily issue triage — classify and post to Slack",
-    #         if_exists="update",
-    #     )
+    if getenv("TRIAGE_CHANNEL") and getenv("SLACK_TOKEN"):
+        mgr.create(
+            name="daily-issue-triage",
+            cron="0 4 * * *",
+            endpoint="/triage-issues",
+            timezone="UTC",
+            description="Daily issue triage with Slack HITL approval gating",
+            if_exists="update",
+        )
     if getenv("DIGEST_CHANNEL") and getenv("SLACK_TOKEN"):
         mgr.create(
             name="daily-digest",
@@ -126,11 +126,11 @@ def sync_repos() -> dict[str, str]:
     return {"status": "ok"}
 
 
-# @app.post("/triage-issues")
-# def triage_issues() -> dict[str, str]:
-#     """Run daily issue triage via Triager agent — categorize, label, post to Slack."""
-#     run_daily_triage()
-#     return {"status": "ok"}
+@app.post("/triage-issues")
+def triage_issues() -> dict[str, str]:
+    """Run daily issue triage with Slack HITL approval gating."""
+    run_daily_triage()
+    return {"status": "ok"}
 
 
 @app.post("/digest")
