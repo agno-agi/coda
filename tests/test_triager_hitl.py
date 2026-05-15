@@ -51,3 +51,11 @@ def test_triager_github_read_ops_not_gated():
         "search_code",
     }
     assert confirmed.isdisjoint(read_ops), f"Read ops should not be gated: {confirmed & read_ops}"
+
+
+def test_triager_has_user_feedback_tools():
+    """Triager should have UserFeedbackTools for severity-picker HITL."""
+    tool_classes = {tool.__class__.__name__ for tool in triager.tools}
+    assert "UserFeedbackTools" in tool_classes, (
+        f"Expected UserFeedbackTools, got {tool_classes}"
+    )

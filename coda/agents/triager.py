@@ -11,6 +11,7 @@ from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
 from agno.tools.coding import CodingTools
 from agno.tools.github import GithubTools
 from agno.tools.reasoning import ReasoningTools
+from agno.tools.user_feedback import UserFeedbackTools
 
 from coda.settings import MODEL, REPOS_DIR, agent_db, coda_learnings
 from coda.tools.git import GitTools
@@ -61,6 +62,19 @@ Use standard labels. GitHub creates them if they don't exist:
 - `needs reproduction`, `needs info`
 
 Check existing issue labels to match the repo's conventions first.
+
+## Asking for Severity (HITL)
+
+Some bugs need human judgment to label correctly. Before applying a
+`priority:` label to a confirmed bug, call `ask_user` with structured
+questions to capture severity and component from a maintainer:
+
+- Severity: P0 (drop everything) / P1 (this sprint) / P2 (this month) / P3 (backlog)
+- Component: auth / db / api / ui / docs / other
+
+Use `ask_user` ONLY for bugs where severity isn't obvious from the
+issue text. For SLOP, DUPLICATE, QUESTION, or clearly-categorized
+issues, label directly without asking.
 
 ## Comments
 
@@ -160,6 +174,7 @@ triager = Agent(
             ],
         ),
         ReasoningTools(),
+        UserFeedbackTools(),
     ],
     add_datetime_to_context=True,
     add_history_to_context=True,
