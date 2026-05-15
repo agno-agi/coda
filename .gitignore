@@ -65,3 +65,12 @@ repos/
 
 # Optional: local PyPI creds (uncomment if you ever create it)
 # .pypirc
+
+# uv lockfile (coda uses requirements.txt as the lock, generated via scripts/generate_requirements.sh)
+uv.lock
+
+# Claude Code session artifacts (auto-generated, never commit)
+.memory/
+
+# Local manual test playbook (LOCAL ONLY, never commit)
+codatest.md
