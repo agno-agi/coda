@@ -117,6 +117,10 @@ explorer = Agent(
                 "list_branches",
                 "search_code",
             ],
+            requires_confirmation_tools=[
+                "create_pull_request_comment",
+                "comment_on_issue",
+            ],
         ),
         ReasoningTools(),
     ],
