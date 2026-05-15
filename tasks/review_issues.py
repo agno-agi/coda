@@ -3,11 +3,15 @@ Daily Issue Triage
 ==================
 
 Fetches recent GitHub issues and runs the Triager agent to categorize,
-label, and comment on them. Posts a summary to Slack. Runs daily via
-scheduler.
+label, and comment on them. Triager's destructive ops (close, label,
+comment) are gated by Slack HITL — when Triager wants to act, a
+multi-row approval card posts to TRIAGE_CHANNEL and only approved
+actions execute.
 
-The Triager categorizes issues and takes action (labeling, commenting)
-but does NOT close issues during automated daily runs.
+If a previous run's HITL card is still unresolved, this run skips to
+avoid stacking cards in the channel. If SLACK_TOKEN/TRIAGE_CHANNEL
+aren't set, the run still proceeds but pauses persist in the agno
+dashboard for browser approval.
 
 Manual trigger:
     python -m tasks.review_issues
@@ -19,28 +23,32 @@ Register/update schedule:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from os import getenv
+from typing import Any, Optional
 
 import httpx
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
+from sqlalchemy import text
 
+from coda.agents.triager import triager
+from db.session import get_postgres_db
 from tasks.sync_repos import load_repos_config
 
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 GITHUB_API = "https://api.github.com"
 DEFAULT_SINCE_HOURS = 24
 
 
 # ---------------------------------------------------------------------------
-# 1. Fetch
+# Fetch
 # ---------------------------------------------------------------------------
 def _parse_owner_repo(url: str) -> str:
     """Extract 'owner/repo' from a GitHub URL."""
@@ -106,99 +114,117 @@ def fetch_recent_issues(repo_url: str, since_hours: int = DEFAULT_SINCE_HOURS) -
 
 
 # ---------------------------------------------------------------------------
-# 2. Triage via Triager agent
+# Pending-run dedup
 # ---------------------------------------------------------------------------
-def triage_issues(issues: list[dict], owner_repo: str) -> str:
-    """Run the Triager agent to categorize and label issues.
+def _has_pending_triage() -> bool:
+    """Return True if a previous Triager run still has unresolved HITL approvals."""
+    db = get_postgres_db()
+    table = getattr(db, "approvals_table_name", None)
+    if not table:
+        return False
+    try:
+        with db.engine.connect() as conn:
+            result = conn.execute(
+                text(f"SELECT count(*) FROM {table} WHERE status = 'pending'")
+            ).scalar()
+            return (result or 0) > 0
+    except Exception as exc:
+        log.warning("Could not check for pending approvals: %s", exc)
+        return False
 
-    The agent reads each issue, categorizes it, labels it, and optionally
-    comments — but never closes issues during automated runs.
 
-    Returns the agent's text summary for posting to Slack.
+# ---------------------------------------------------------------------------
+# Slack header + HITL card
+# ---------------------------------------------------------------------------
+def _post_header(client: WebClient, channel: str, repo_name: str) -> Optional[str]:
+    """Post the daily-triage header to TRIAGE_CHANNEL.
+
+    Returns the message timestamp, used as thread_ts for any HITL card
+    Triager produces. Returns None on failure.
     """
-    from coda.agents.triager import triager
+    try:
+        resp = client.chat_postMessage(
+            channel=channel,
+            text=f":robot_face: *Daily issue triage starting* — `{repo_name}`",
+        )
+        return resp.get("ts")
+    except SlackApiError as exc:
+        log.error("Failed to post header to %s: %s", channel, exc.response.get("error"))
+        return None
 
+
+async def _post_hitl_card(token: str, paused_response: Any, channel: str, thread_ts: str) -> None:
+    """Post the HITL approval card for a paused Triager run."""
+    from agno.os.interfaces.slack.pause import post_pause_card
+
+    client = AsyncWebClient(token=token)
+    await post_pause_card(client, paused_response, channel, thread_ts)
+
+
+# ---------------------------------------------------------------------------
+# Triage one repo
+# ---------------------------------------------------------------------------
+def triage_repo(owner_repo: str, issues: list[dict], session_id: str) -> Any:
+    """Run Triager on the issues for one repo. Returns the (possibly paused) RunOutput.
+
+    The session_id format f"{triager.id}:{thread_ts}" is required by agno's
+    Slack interactions router so it can resume the run when a user clicks
+    Approve. Destructive ops are gated by requires_confirmation_tools on
+    Triager's GithubTools — the LLM emits the call, agno pauses, the card
+    posts, only approved rows execute.
+    """
     issues_text = "\n".join(
-        f"- #{i['number']}: {i['title']} (by @{i['user']}, labels: {', '.join(i['labels']) or 'none'})" for i in issues
+        f"- #{i['number']}: {i['title']} (by @{i['user']}, labels: {', '.join(i['labels']) or 'none'})"
+        for i in issues
     )
-
-    response = triager.run(
+    return triager.run(
         f"Daily automated triage for **{owner_repo}**.\n\n"
         f"Review these {len(issues)} recent issues:\n\n{issues_text}\n\n"
         f"For each issue:\n"
         f"1. Read the full details with `get_issue`\n"
         f"2. Categorize it\n"
-        f"3. Label it appropriately\n"
-        f"4. Comment if it adds value (code pointers, duplicate links)\n\n"
-        f"**DO NOT close or reopen any issues** — this is an automated scan.\n\n"
-        f"Format your response as a Slack summary with these sections:\n"
+        f"3. Label, comment, or close as appropriate.\n\n"
+        f"All destructive actions are gated by Slack HITL approval — a card "
+        f"will appear; only approved actions execute.\n\n"
+        f"Format your final response as a Slack summary:\n"
         f"- :red_circle: *Major Bugs* (if any)\n"
         f"- :large_green_circle: *Low-Hanging Fruit* (if any)\n"
         f"- :wastebasket: *Slop* (if any)\n"
-        f"- Other categories as needed (Bug, Enhancement, Question, etc.)\n"
-        f"Each item: `• <issue_url|#number title> — summary (action: labeled X)`\n"
-        f"End with a line: `Scanned N issues | YYYY-MM-DD HH:MM UTC`"
+        f"- Other categories as needed\n"
+        f"Each item: `• <issue_url|#number title> — summary (action: X)`\n"
+        f"End with: `Scanned N issues | YYYY-MM-DD HH:MM UTC`",
+        session_id=session_id,
     )
 
-    return response.content  # type: ignore[return-value]
-
 
 # ---------------------------------------------------------------------------
-# 3. Post to Slack
-# ---------------------------------------------------------------------------
-def post_triage_to_slack(summary: str, repo_name: str) -> None:
-    """Send triage summary to Slack. Fails gracefully if not configured."""
-    token = getenv("SLACK_TOKEN", "")
-    channel = getenv("TRIAGE_CHANNEL", "")
-    message = f"*Coda Issue Triage — {repo_name}*\n\n{summary}"
-
-    if not token or not channel:
-        log.warning("SLACK_TOKEN or TRIAGE_CHANNEL not set — printing to stdout instead")
-        print(message)
-        return
-
-    try:
-        client = WebClient(token=token)
-        client.chat_postMessage(channel=channel, text=message, mrkdwn=True)
-        log.info("Posted triage summary to Slack channel %s", channel)
-    except SlackApiError as e:
-        error = e.response.get("error", "unknown")
-        if error == "channel_not_found":
-            log.error(
-                "Slack channel '%s' not found. Check TRIAGE_CHANNEL in your env. "
-                "Use the channel ID (e.g. C0XXXXXXX), not the name. "
-                "You can find it in Slack: right-click channel → View details → copy ID at the bottom.",
-                channel,
-            )
-        elif error == "not_in_channel":
-            log.error(
-                "Coda bot is not in channel '%s'. Invite it first: /invite @Coda in the channel.",
-                channel,
-            )
-        elif error == "invalid_auth":
-            log.error("SLACK_TOKEN is invalid or expired. Check your .env / compose.yaml.")
-        else:
-            log.error("Slack API error: %s", error)
-        log.info("Falling back to stdout:")
-        print(message)
-
-
-# ---------------------------------------------------------------------------
-# 4. Main entry
+# Main entry
 # ---------------------------------------------------------------------------
 def run_daily_triage() -> None:
-    """Fetch → triage (via Triager agent) → post for all configured repos."""
-    repos = load_repos_config()
+    """Fetch → triage (with HITL) → post HITL card if paused, for all configured repos.
 
+    Skips if a previous cron run still has pending approvals.
+    Falls back to dashboard-only mode if SLACK_TOKEN/TRIAGE_CHANNEL not set.
+    """
+    if _has_pending_triage():
+        log.info("Previous triage run still has pending HITL approvals — skipping this run")
+        return
+
+    repos = load_repos_config()
     if not repos:
         log.warning("No repos configured in repos.yaml — nothing to triage")
         return
+
+    token = getenv("SLACK_TOKEN", "")
+    channel = getenv("TRIAGE_CHANNEL", "")
+    slack_client = WebClient(token=token) if (token and channel) else None
+    if not slack_client:
+        log.info("SLACK_TOKEN/TRIAGE_CHANNEL not set — dashboard-only mode")
 
     for repo_config in repos:
         url = repo_config.get("url")
         if not url:
             continue
-
         name = url.rstrip("/").split("/")[-1].removesuffix(".git")
         owner_repo = _parse_owner_repo(url)
         log.info("Triaging issues for %s...", name)
@@ -209,24 +235,53 @@ def run_daily_triage() -> None:
             log.exception("Failed to fetch issues for %s — skipping", name)
             continue
 
-        total = len(issues)
-        log.info("Found %d new issue(s) in the last 24h for %s", total, name)
-
         if not issues:
-            now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-            post_triage_to_slack(
-                f"Scanned 0 new issues in the last 24h. Nothing to triage.\n———\n{now}",
-                name,
-            )
+            log.info("No new issues for %s in the last 24h", name)
+            if slack_client:
+                try:
+                    slack_client.chat_postMessage(
+                        channel=channel,
+                        text=f"_No new issues to triage in `{name}`._",
+                    )
+                except SlackApiError as exc:
+                    log.error("Slack post failed for %s: %s", name, exc.response.get("error"))
             continue
 
+        header_ts: Optional[str] = None
+        if slack_client:
+            header_ts = _post_header(slack_client, channel, name)
+
+        session_id = (
+            f"{triager.id}:{header_ts}"
+            if header_ts
+            else f"cron-triage-{name}-{int(time.time())}"
+        )
+
         try:
-            summary = triage_issues(issues, owner_repo)
+            response = triage_repo(owner_repo, issues, session_id)
         except Exception:
             log.exception("Triager agent failed for %s — skipping", name)
             continue
 
-        post_triage_to_slack(summary, name)
+        status = getattr(response, "status", None)
+
+        if status == "PAUSED" and slack_client and header_ts:
+            try:
+                asyncio.run(_post_hitl_card(token, response, channel, header_ts))
+                log.info("HITL card posted for %s — awaiting approval", name)
+            except Exception:
+                log.exception("Failed to post HITL card for %s — fall back to dashboard", name)
+        elif status == "PAUSED":
+            log.info("Triager paused for %s — approve via agno dashboard /approvals", name)
+        else:
+            if slack_client and header_ts:
+                summary = getattr(response, "content", "") or "Triage complete."
+                try:
+                    slack_client.chat_postMessage(
+                        channel=channel, text=summary, mrkdwn=True, thread_ts=header_ts,
+                    )
+                except SlackApiError as exc:
+                    log.error("Slack summary post failed for %s: %s", name, exc.response.get("error"))
 
     log.info("Daily triage complete.")
 
@@ -237,14 +292,12 @@ def run_daily_triage() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-    parser = argparse.ArgumentParser(description="Daily issue triage")
+    parser = argparse.ArgumentParser(description="Daily issue triage with HITL gating")
     parser.add_argument("--schedule", action="store_true", help="Register/update the schedule")
     args = parser.parse_args()
 
     if args.schedule:
         from agno.scheduler import ScheduleManager
-
-        from db import get_postgres_db
 
         mgr = ScheduleManager(get_postgres_db())
         schedule = mgr.create(
@@ -252,7 +305,7 @@ if __name__ == "__main__":
             cron="0 4 * * *",
             endpoint="/triage-issues",
             timezone="UTC",
-            description="Daily issue triage — classify and post to Slack",
+            description="Daily issue triage with Slack HITL approval gating",
             if_exists="update",
         )
         print(f"Schedule ready: {schedule.name} (next: {schedule.next_run_at})")
