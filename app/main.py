@@ -12,7 +12,13 @@ from contextlib import asynccontextmanager
 from os import getenv
 from pathlib import Path
 
-from agno.os import AgentOS
+# Install Slack HITL patches before agno boots — caps confirmation-card body
+# text so multi-row pause cards survive Slack's 201-char block-body limit.
+from coda import slack_patches
+
+slack_patches.install()
+
+from agno.os import AgentOS  # noqa: E402
 
 from coda.agents.coder import coder
 from coda.agents.explorer import explorer
