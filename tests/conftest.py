@@ -52,8 +52,13 @@ def make_agent_mock():
     agent_mock = AsyncMock()
     agent_mock.arun = AsyncMock(
         return_value=Mock(
-            status="OK", content="done", reasoning_content=None,
-            images=None, files=None, videos=None, audio=None,
+            status="OK",
+            content="done",
+            reasoning_content=None,
+            images=None,
+            files=None,
+            videos=None,
+            audio=None,
         )
     )
     return agent_mock
@@ -107,6 +112,7 @@ def make_async_client_mock(stream_mock=None):
 async def wait_for_call(mock_method, timeout: float = 5.0):
     """Wait for an AsyncMock to be called, with timeout."""
     import asyncio
+
     elapsed = 0.0
     while not mock_method.called and elapsed < timeout:
         await asyncio.sleep(0.1)
@@ -124,7 +130,7 @@ def make_requirement(req_id: str = "r1", **tool_overrides):
         "requires_confirmation": True,
     }
     defaults.update(tool_overrides)
-    return RunRequirement(tool_execution=ToolExecution(**defaults), id=req_id)
+    return RunRequirement(tool_execution=ToolExecution(**defaults), id=req_id)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------

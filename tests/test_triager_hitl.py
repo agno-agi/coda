@@ -26,7 +26,7 @@ DESTRUCTIVE_OPS = {
 
 def _get_github_tools():
     """Find the GithubTools toolkit in triager.tools."""
-    for tool in triager.tools:
+    for tool in triager.tools:  # type: ignore[union-attr]
         if tool.__class__.__name__ == "GithubTools":
             return tool
     raise AssertionError("GithubTools not found on triager")

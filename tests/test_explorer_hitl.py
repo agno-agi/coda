@@ -13,7 +13,7 @@ WRITE_OPS = {"create_pull_request_comment", "comment_on_issue"}
 
 def _get_github_tools():
     """Find the GithubTools toolkit in explorer.tools."""
-    for tool in explorer.tools:
+    for tool in explorer.tools:  # type: ignore[union-attr]
         if tool.__class__.__name__ == "GithubTools":
             return tool
     raise AssertionError("GithubTools not found on explorer")
@@ -42,6 +42,4 @@ def test_explorer_read_ops_not_gated():
         "list_branches",
         "search_code",
     }
-    assert confirmed.isdisjoint(read_ops), (
-        f"Read ops should not be gated: {confirmed & read_ops}"
-    )
+    assert confirmed.isdisjoint(read_ops), f"Read ops should not be gated: {confirmed & read_ops}"

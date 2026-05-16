@@ -11,7 +11,7 @@ from coda.agents.planner import planner  # noqa: E402
 
 def _get_github_tools():
     """Find the GithubTools toolkit in planner.tools."""
-    for tool in planner.tools:
+    for tool in planner.tools:  # type: ignore[union-attr]
         if tool.__class__.__name__ == "GithubTools":
             return tool
     raise AssertionError("GithubTools not found on planner")
@@ -35,6 +35,4 @@ def test_planner_read_ops_not_gated():
         "get_pull_requests",
         "search_code",
     }
-    assert confirmed.isdisjoint(read_ops), (
-        f"Read ops should not be gated: {confirmed & read_ops}"
-    )
+    assert confirmed.isdisjoint(read_ops), f"Read ops should not be gated: {confirmed & read_ops}"

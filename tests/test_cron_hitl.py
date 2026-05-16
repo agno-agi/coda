@@ -47,7 +47,7 @@ async def test_post_hitl_card_calls_agno_post_pause_card():
         await _post_hitl_card("xoxb-test", mock_paused, "C123", "1234.5678")
 
         mock_post.assert_awaited_once()
-        args = mock_post.await_args[0]
+        args = mock_post.await_args[0]  # type: ignore[index]
         assert args[1] is mock_paused
         assert args[2] == "C123"
         assert args[3] == "1234.5678"

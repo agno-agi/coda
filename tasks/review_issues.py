@@ -166,8 +166,7 @@ def triage_repo(owner_repo: str, issues: list[dict], session_id: str) -> Any:
     posts, only approved rows execute.
     """
     issues_text = "\n".join(
-        f"- #{i['number']}: {i['title']} (by @{i['user']}, labels: {', '.join(i['labels']) or 'none'})"
-        for i in issues
+        f"- #{i['number']}: {i['title']} (by @{i['user']}, labels: {', '.join(i['labels']) or 'none'})" for i in issues
     )
     return triager.run(
         f"Daily automated triage for **{owner_repo}**.\n\n"
@@ -265,7 +264,10 @@ def run_daily_triage() -> None:
                 summary = getattr(response, "content", "") or "Triage complete."
                 try:
                     slack_client.chat_postMessage(
-                        channel=channel, text=summary, mrkdwn=True, thread_ts=header_ts,
+                        channel=channel,
+                        text=summary,
+                        mrkdwn=True,
+                        thread_ts=header_ts,
                     )
                 except SlackApiError as exc:
                     log.error("Slack summary post failed for %s: %s", name, exc.response.get("error"))
