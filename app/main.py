@@ -12,14 +12,9 @@ from contextlib import asynccontextmanager
 from os import getenv
 from pathlib import Path
 
-# Install Slack HITL patches before agno boots — caps confirmation-card body
-# text so multi-row pause cards survive Slack's 201-char block-body limit.
+from agno.os import AgentOS
+
 from coda import slack_patches
-
-slack_patches.install()
-
-from agno.os import AgentOS  # noqa: E402
-
 from coda.agents.coder import coder
 from coda.agents.explorer import explorer
 from coda.agents.planner import planner
@@ -28,9 +23,12 @@ from coda.agents.triager import triager
 from coda.team import coda
 from db import get_postgres_db
 from tasks.daily_digest import run_daily_digest
-
 from tasks.review_issues import run_daily_triage
 from tasks.sync_repos import sync_all_repos
+
+# Cap HITL confirmation-card body under Slack's 201-char block limit so
+# multi-row pause cards render. Must run before any pause card is built.
+slack_patches.install()
 
 # ---------------------------------------------------------------------------
 # Environment
