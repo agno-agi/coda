@@ -30,4 +30,7 @@ def _build_confirmation_card_capped(requirement, run_id="", awaiting_ts=None):
 
 def install() -> None:
     """Idempotently install the body-text cap on agno's confirmation card builder."""
+    if getattr(_builders._build_confirmation_card, "_coda_capped", False):
+        return
+    _build_confirmation_card_capped._coda_capped = True
     _builders._build_confirmation_card = _build_confirmation_card_capped

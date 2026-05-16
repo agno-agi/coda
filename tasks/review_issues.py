@@ -8,10 +8,8 @@ comment) are gated by Slack HITL — when Triager wants to act, a
 multi-row approval card posts to TRIAGE_CHANNEL and only approved
 actions execute.
 
-If a previous run's HITL card is still unresolved, this run skips to
-avoid stacking cards in the channel. If SLACK_TOKEN/TRIAGE_CHANNEL
-aren't set, the run still proceeds but pauses persist in the agno
-dashboard for browser approval.
+If SLACK_TOKEN/TRIAGE_CHANNEL aren't set, the run still proceeds but
+pauses persist in the agno dashboard for browser approval.
 
 Manual trigger:
     python -m tasks.review_issues
@@ -35,7 +33,6 @@ import httpx
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
-from sqlalchemy import text
 
 from coda.agents.triager import triager
 from db.session import get_postgres_db
@@ -114,23 +111,18 @@ def fetch_recent_issues(repo_url: str, since_hours: int = DEFAULT_SINCE_HOURS) -
 
 
 # ---------------------------------------------------------------------------
-# Pending-run dedup
+# Session ID
 # ---------------------------------------------------------------------------
-def _has_pending_triage() -> bool:
-    """Return True if a previous Triager run still has unresolved HITL approvals."""
-    db = get_postgres_db()
-    table = getattr(db, "approvals_table_name", None)
-    if not table:
-        return False
-    try:
-        with db.engine.connect() as conn:
-            result = conn.execute(
-                text(f"SELECT count(*) FROM {table} WHERE status = 'pending'")
-            ).scalar()
-            return (result or 0) > 0
-    except Exception as exc:
-        log.warning("Could not check for pending approvals: %s", exc)
-        return False
+def _build_session_id(repo_name: str, header_ts: Optional[str]) -> str:
+    """Build the Triager run session_id for a cron triage run.
+
+    The ``f"{triager.id}:{header_ts}"`` form lets agno's Slack interactions
+    router resume the run when a user clicks Approve. Without a Slack header
+    a synthetic id is used — such runs are never resumed via Slack.
+    """
+    if header_ts:
+        return f"{triager.id}:{header_ts}"
+    return f"cron-triage-{repo_name}-{int(time.time())}"
 
 
 # ---------------------------------------------------------------------------
@@ -203,13 +195,8 @@ def triage_repo(owner_repo: str, issues: list[dict], session_id: str) -> Any:
 def run_daily_triage() -> None:
     """Fetch → triage (with HITL) → post HITL card if paused, for all configured repos.
 
-    Skips if a previous cron run still has pending approvals.
     Falls back to dashboard-only mode if SLACK_TOKEN/TRIAGE_CHANNEL not set.
     """
-    if _has_pending_triage():
-        log.info("Previous triage run still has pending HITL approvals — skipping this run")
-        return
-
     repos = load_repos_config()
     if not repos:
         log.warning("No repos configured in repos.yaml — nothing to triage")
@@ -251,11 +238,11 @@ def run_daily_triage() -> None:
         if slack_client:
             header_ts = _post_header(slack_client, channel, name)
 
-        session_id = (
-            f"{triager.id}:{header_ts}"
-            if header_ts
-            else f"cron-triage-{name}-{int(time.time())}"
-        )
+        if slack_client and header_ts is None:
+            log.warning("Header post failed for %s — skipping (no Slack delivery path)", name)
+            continue
+
+        session_id = _build_session_id(name, header_ts)
 
         try:
             response = triage_repo(owner_repo, issues, session_id)

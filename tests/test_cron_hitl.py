@@ -9,29 +9,6 @@ import pytest
 os.environ.setdefault("GITHUB_ACCESS_TOKEN", "test-token-no-network")
 
 
-def test_has_pending_triage_returns_false_when_no_approvals_table():
-    """Without approvals_table configured, dedup check returns False (not blocking)."""
-    from tasks.review_issues import _has_pending_triage
-
-    mock_db = Mock()
-    mock_db.approvals_table_name = None
-
-    with patch("tasks.review_issues.get_postgres_db", return_value=mock_db):
-        assert _has_pending_triage() is False
-
-
-def test_has_pending_triage_returns_false_on_db_error():
-    """If the DB query raises, dedup check returns False (don't block on transient errors)."""
-    from tasks.review_issues import _has_pending_triage
-
-    mock_db = Mock()
-    mock_db.approvals_table_name = "coda_approvals"
-    mock_db.engine.connect.side_effect = RuntimeError("connection lost")
-
-    with patch("tasks.review_issues.get_postgres_db", return_value=mock_db):
-        assert _has_pending_triage() is False
-
-
 def test_post_header_returns_ts_on_success():
     """_post_header returns the message ts when chat_postMessage succeeds."""
     from tasks.review_issues import _post_header
@@ -76,28 +53,22 @@ async def test_post_hitl_card_calls_agno_post_pause_card():
         assert args[3] == "1234.5678"
 
 
-def test_session_id_format_when_header_ts_present():
-    """session_id format must match agno's contract: f'{triager.id}:{header_ts}'."""
+def test_build_session_id_uses_triager_prefix_with_header():
+    """With a header_ts, _build_session_id yields agno's resume contract: '{triager.id}:{ts}'."""
     from coda.agents.triager import triager
+    from tasks.review_issues import _build_session_id
 
-    header_ts = "1234567890.123456"
-    session_id = f"{triager.id}:{header_ts}"
+    session_id = _build_session_id("agno", "1234567890.123456")
 
-    # Format check: exactly two colon-separated parts, second part is the ts
-    parts = session_id.split(":")
-    assert len(parts) == 2
-    assert parts[0] == triager.id
-    assert parts[1] == header_ts
+    assert session_id == f"{triager.id}:1234567890.123456"
+    assert session_id.startswith("triager:")
 
 
-def test_session_id_falls_back_to_synthetic_when_no_header():
-    """Without a Slack header_ts, session_id uses a synthetic cron-triage prefix."""
-    import time as time_module
+def test_build_session_id_falls_back_to_synthetic_when_no_header():
+    """Without a header_ts, _build_session_id uses a synthetic cron-triage id."""
+    from tasks.review_issues import _build_session_id
 
-    repo_name = "agno"
-    fake_ts = 1700000000
-    expected = f"cron-triage-{repo_name}-{fake_ts}"
+    with patch("time.time", return_value=1700000000):
+        session_id = _build_session_id("agno", None)
 
-    with patch("time.time", return_value=fake_ts):
-        synthetic = f"cron-triage-{repo_name}-{int(time_module.time())}"
-    assert synthetic == expected
+    assert session_id == "cron-triage-agno-1700000000"
