@@ -8,7 +8,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "Agno", email = "hello@agno.com" }]
 
 dependencies = [
-    "agno[os]",
+    "agno[os]>=2.6.6,<2.7",
     "aiohttp",
     "openai",
     "parallel-web",
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["mypy", "ruff"]
+dev = ["mypy", "ruff", "pytest", "pytest-asyncio"]
 
 [build-system]
 requires = ["setuptools"]
@@ -27,6 +27,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["coda*", "db*", "app*", "tasks*", "evals*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
