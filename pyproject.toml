@@ -28,10 +28,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["coda*", "db*", "app*", "tasks*", "evals*"]
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-
 [tool.ruff]
 line-length = 120
 exclude = [".venv*"]
