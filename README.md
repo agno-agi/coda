@@ -22,9 +22,7 @@ This applies across specialists:
 - **Planner** previews proposed issues as a multi-row card before any are created.
 - **Explorer** confirms before posting public PR/issue comments.
 
-Daily background triage runs cron-style at 04:00 UTC, posts a header to `TRIAGE_CHANNEL`, and threads the approval card under it.
-
-Setup requires the Slack app's **Interactivity** request URL pointing at `{your-host}/interactions`. See `docs/SLACK_CONNECT.md` for the full Slack app config.
+Setup requires the Slack app's **Interactivity** request URL pointing at `{your-host}/slack/interactions`. See `docs/SLACK_CONNECT.md` for the full Slack app config.
 
 ## Get Started
 
