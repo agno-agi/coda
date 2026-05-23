@@ -75,7 +75,7 @@ def _register_schedules() -> None:
     #         cron="0 4 * * *",
     #         endpoint="/triage-issues",
     #         timezone="UTC",
-    #         description="Daily issue triage with Slack HITL approval gating",
+    #         description="Daily issue triage — classify and post to Slack",
     #         if_exists="update",
     #     )
     if getenv("DIGEST_CHANNEL") and getenv("SLACK_TOKEN"):
@@ -128,7 +128,7 @@ def sync_repos() -> dict[str, str]:
 
 # @app.post("/triage-issues")
 # def triage_issues() -> dict[str, str]:
-#     """Run daily issue triage with Slack HITL approval gating."""
+#     """Run daily issue triage via Triager agent — categorize, label, post to Slack."""
 #     run_daily_triage()
 #     return {"status": "ok"}
 

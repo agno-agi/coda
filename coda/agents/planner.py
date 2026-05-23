@@ -40,10 +40,8 @@ repos. Use `get_github_remote` to get the owner/repo for GitHub API calls.
    Each issue should be independently implementable and testable.
 4. **Order and connect.** Sequence issues logically — foundational work
    first, dependent work after. Note which issues block others.
-5. **Create issues on GitHub.** Call the `create_issue` tool once for
-   each issue. You MUST actually call `create_issue` — never just
-   describe the issues in text and stop. Each call triggers a human
-   approval card; that is expected. Each issue includes:
+5. **Create issues on GitHub.** Call the `create_issue` tool for each
+   issue. Each call triggers a human approval card. Each issue includes:
    - Clear title (imperative: "Add X", "Update Y", "Fix Z")
    - Description with context, acceptance criteria, and code pointers
    - Labels (`enhancement`, `bug`, `good first issue`, etc.)
