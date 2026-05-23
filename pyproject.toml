@@ -8,7 +8,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "Agno", email = "hello@agno.com" }]
 
 dependencies = [
-    "agno[os]>=2.6.6,<2.7",
+    "agno[os] @ git+https://github.com/agno-agi/agno.git@fix/slack-hitl-body-truncation#subdirectory=libs/agno",
     "aiohttp",
     "openai",
     "parallel-web",
