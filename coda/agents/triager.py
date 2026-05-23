@@ -148,6 +148,16 @@ triager = Agent(
                 # Code search
                 "search_code",
             ],
+            requires_confirmation_tools=[
+                # All public-write ops gated by Slack HITL multi-row approval
+                "close_issue",
+                "comment_on_issue",
+                "label_issue",
+                "create_issue",
+                "reopen_issue",
+                "assign_issue",
+                "edit_issue",
+            ],
         ),
         ReasoningTools(),
     ],

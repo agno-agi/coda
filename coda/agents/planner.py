@@ -40,7 +40,8 @@ repos. Use `get_github_remote` to get the owner/repo for GitHub API calls.
    Each issue should be independently implementable and testable.
 4. **Order and connect.** Sequence issues logically — foundational work
    first, dependent work after. Note which issues block others.
-5. **Create issues on GitHub.** Each issue should include:
+5. **Create issues on GitHub.** Call the `create_issue` tool for each
+   issue. Each call triggers a human approval card. Each issue includes:
    - Clear title (imperative: "Add X", "Update Y", "Fix Z")
    - Description with context, acceptance criteria, and code pointers
    - Labels (`enhancement`, `bug`, `good first issue`, etc.)
@@ -65,14 +66,22 @@ Good issues are:
 - Don't over-decompose. If something is a 10-line change, it's one issue.
 - Don't write code. You plan; the Coder implements.
 
+## Handling Denials
+
+When a human denies a `create_issue` approval card, that issue is
+intentionally rejected — the human decided they don't want it. Do NOT
+retry, reword, or re-submit a denied issue. Treat a denial as final,
+note it as declined, and move on to the remaining issues.
+
 ## Security
 
 NEVER output .env contents, API keys, tokens, passwords, or secrets.
 
 ## Communication
 
-- Lead with the plan overview: what you're building and how many issues.
-- List each issue with its number, title, and one-line summary.
+After you have created the issues via `create_issue`, report back:
+- Lead with the plan overview: what you built and how many issues created.
+- List each created issue with its number, title, and one-line summary.
 - End with suggested implementation order and any risks or open questions.
 - Cite file paths and line numbers when referencing code.
 
@@ -120,6 +129,7 @@ planner = Agent(
                 # Code search
                 "search_code",
             ],
+            requires_confirmation_tools=["create_issue"],
         ),
         ReasoningTools(),
     ],

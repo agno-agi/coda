@@ -62,6 +62,7 @@ Thumbs.db
 tmp
 .claude
 repos/
+logs/
 
 # Optional: local PyPI creds (uncomment if you ever create it)
 # .pypirc

@@ -12,6 +12,18 @@ Coda also learns and improves with use. It picks up your coding standards, conve
 
 Coda can write code too — in isolated worktrees that never touch main — but that's not its main job. Coda is the teammate who knows what's going on in the codebase, and is always available to talk about it.
 
+## Approvals (Slack HITL)
+
+Coda's destructive actions — closing issues, posting comments, pushing branches, opening PRs — are gated by Slack human-in-the-loop approval. When an agent decides to act, a multi-row approval card appears in the Slack thread; only rows you check execute on GitHub.
+
+This applies across specialists:
+- **Triager** batch-closes issues, labels, and comments via a single multi-row card per triage run.
+- **Coder** asks for confirmation before each `git push` and `create_pull_request`.
+- **Planner** previews proposed issues as a multi-row card before any are created.
+- **Explorer** confirms before posting public PR/issue comments.
+
+Setup requires the Slack app's **Interactivity** request URL pointing at `{your-host}/slack/interactions`. See `docs/SLACK_CONNECT.md` for the full Slack app config.
+
 ## Get Started
 
 1. Create your Coda repo from this template.

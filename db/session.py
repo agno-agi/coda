@@ -26,7 +26,7 @@ def get_postgres_db(contents_table: str | None = None) -> PostgresDb:
     """
     if contents_table is not None:
         return PostgresDb(id=DB_ID, db_url=db_url, knowledge_table=contents_table)
-    return PostgresDb(id=DB_ID, db_url=db_url)
+    return PostgresDb(id=DB_ID, db_url=db_url, approvals_table="coda_approvals")
 
 
 def create_knowledge(name: str, table_name: str) -> Knowledge:
