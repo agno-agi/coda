@@ -74,8 +74,16 @@ coder = Agent(
     ),
     add_learnings_to_context=True,
     tools=[
-        CodingTools(base_dir=REPOS_DIR, all=True, shell_timeout=120),
-        GitTools(base_dir=str(REPOS_DIR)),
+        CodingTools(
+            base_dir=REPOS_DIR,
+            all=True,
+            shell_timeout=120,
+            requires_confirmation_tools=["run_shell"],
+        ),
+        GitTools(
+            base_dir=str(REPOS_DIR),
+            requires_confirmation_tools=["git_push"],
+        ),
         GithubTools(
             include_tools=[
                 "get_pull_request",
@@ -85,6 +93,11 @@ coder = Agent(
                 "create_pull_request",
                 "get_issue",
                 "list_issues",
+                "create_issue",
+                "comment_on_issue",
+            ],
+            requires_confirmation_tools=[
+                "create_pull_request",
                 "create_issue",
                 "comment_on_issue",
             ],
