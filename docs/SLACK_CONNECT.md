@@ -4,7 +4,7 @@ Coda is designed to live in Slack. Each Slack thread becomes a session with its 
 
 ## Prerequisites
 
-- Coda running locally or deployed (see README step 4)
+- Coda running locally or deployed (see the README's Quick start)
 - A Slack workspace with admin privileges
 - [ngrok](https://ngrok.com) installed (for local development only)
 
