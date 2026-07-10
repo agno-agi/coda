@@ -7,7 +7,7 @@ Coda is a code companion that lives in Slack. Helps engineering teams understand
 ### Team Structure
 
 ```
-Coda (Team leader, Coordinate mode, gpt-5.4)
+Coda (Team leader, Coordinate mode, gpt-5.6-sol)
 ├── Coder — writes code in isolated worktrees, opens PRs
 ├── Explorer — searches code, reviews PRs/branches (read-only)
 ├── Planner — breaks feature requests into ordered GitHub issues
@@ -22,7 +22,7 @@ Coda (Team leader, Coordinate mode, gpt-5.4)
 - **Interface:** Slack (via Agno Slack interface)
 - **Database:** PostgreSQL + pgvector (learnings only, not code indexing)
 - **Repos:** cloned to `/repos`, searched directly on disk (ephemeral in production, persistent volume in local dev)
-- **Model:** gpt-5.4 (all agents)
+- **Model:** gpt-5.6-sol (all agents)
 
 ### Key Design Decisions
 

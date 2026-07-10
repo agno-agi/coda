@@ -15,7 +15,7 @@ from db import create_knowledge, get_postgres_db
 agent_db = get_postgres_db()
 REPOS_DIR = Path(getenv("REPOS_DIR", str(Path(__file__).parent.parent / "repos")))
 REPOS_DIR.mkdir(exist_ok=True)
-MODEL = OpenAIResponses(id="gpt-5.4")
+MODEL = OpenAIResponses(id="gpt-5.6-sol")
 
 # Learnings knowledge base (vector search over learned patterns — NOT code).
 # Created once here, shared by all agents via their own LearningMachine instances.

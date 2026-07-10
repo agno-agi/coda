@@ -17,7 +17,7 @@ The canonical specification is `docs/SPEC.md`. All other documentation derives f
 
 ## Team Structure
 ```
-Coda (Team, Coordinate, gpt-5.4)
+Coda (Team, Coordinate, gpt-5.6-sol)
 ├── Coder — writes code in worktrees, opens PRs
 ├── Explorer — searches code, traces flows, reviews PRs/branches (read-only)
 ├── Planner — breaks feature requests into ordered GitHub issues

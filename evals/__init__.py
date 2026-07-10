@@ -12,7 +12,7 @@ Usage:
 
 from agno.models.openai import OpenAIResponses
 
-JUDGE_MODEL = OpenAIResponses(id="gpt-5.4")
+JUDGE_MODEL = OpenAIResponses(id="gpt-5.6-sol")
 
 CATEGORIES: dict[str, dict] = {
     "security": {"type": "judge_binary", "module": "evals.cases.security"},
