@@ -1,407 +1,102 @@
-# Coda
+# Coda — a code companion that lives in Slack
 
-A code companion that lives in Slack.
+Coding agents help you write code faster, but most engineering work isn't writing code — it's understanding how things work, reviewing PRs, figuring out what broke, and triaging the backlog. That work happens in Slack and GitHub, not in an editor. Coda fills that gap: it answers architecture questions with file-and-line citations, reviews PRs against your conventions, triages issues, plans work, and (when asked) writes code in isolated worktrees that never touch `main`. It's built for engineering teams who want a teammate that knows the codebase and is always available to talk about it.
 
-Coding agents help us write code faster, but most engineering work isn't writing code. It's understanding how things work, reviewing PRs, figuring out what broke and why, triaging the backlog, and deciding what's safe to change. That work happens in Slack and GitHub, not in an editor.
+## How it works
 
-Coda fills that gap. It answers architecture questions like "how does auth work" or "where is the model API call". It reviews PRs and open branches, diffs them against your conventions, and leaves comments. It reads open issues and flags the urgent ones worth tackling next.
+Coda is a coordinate-mode [Agno](https://github.com/agno-agi/agno) team. A leader routes each request to a specialist:
 
-Most importantly, Coda lives in Slack and works alongside your team.
+| Agent | Access | Does |
+|---|---|---|
+| **Explorer** | read-only code + git + GitHub | code questions, flow tracing, PR/branch review |
+| **Planner** | read-only code + GitHub issues | breaks features into ordered, scoped GitHub issues |
+| **Triager** | read-only code + GitHub issues | categorizes, labels, comments on, and closes issues |
+| **Coder** | read-write code, git worktrees, PRs | features, fixes, tests — always on a branch, never `main` |
+| **Researcher** | web search (only if `PARALLEL_API_KEY` is set) | docs, library APIs, advisories, error messages |
 
-Coda also learns and improves with use. It picks up your coding standards, conventions, and patterns. Over time it stops waiting to be asked — it reviews open issues on a schedule, flags low-hanging fruit, and proposes changes. It shows up in your Slack channel with a summary: here's what's worth tackling, here's why, here's how the code already handles similar cases.
+Around the team:
 
-Coda can write code too — in isolated worktrees that never touch main — but that's not its main job. Coda is the teammate who knows what's going on in the codebase, and is always available to talk about it.
+- **Learning loop** — a shared [Learning Machine](https://docs.agno.com/learning/overview) (agentic mode) picks up your conventions and patterns from every interaction; agentic memory tracks user context. Coda gets sharper the more you use it.
+- **Repos** — listed in `repos.yaml`, cloned into a persistent volume, and re-synced every 5 minutes by a built-in schedule.
+- **Daily digest** — with `DIGEST_CHANNEL` and Slack credentials set, Coda posts a morning summary (merged PRs, PRs awaiting review, new and stale issues) at 08:00 UTC. Schedules are registered idempotently on startup; scheduled *issue triage* is currently disabled — run it manually with `python -m tasks.review_issues`.
+- **Guardrails** — Coda opens PRs, humans merge them. All code work happens in isolated worktrees. Code never leaves your infrastructure except calls to your configured LLM provider.
 
-## Get Started
+## Quick start
 
-1. Create your Coda repo from this template.
-2. Configure GitHub and model connections.
-3. Tell Coda which repos to learn.
-4. Run locally.
-5. Connect to the Web UI.
-6. Connect to Slack.
-7. Deploy to your cloud provider.
-8. Secure your deployment.
+Requires Docker. Get an [OpenAI API key](https://platform.openai.com/api-keys) and a fine-grained GitHub PAT ([docs/GITHUB_ACCESS.md](docs/GITHUB_ACCESS.md)).
 
-### 1. Create your repo
-
-Click **Use this template** to create your own repo, then clone it:
-
-```bash
-git clone https://github.com/your-org/coda.git && cd coda
-```
-
-Or clone directly:
 ```bash
 git clone https://github.com/agno-agi/coda.git && cd coda
-```
 
-### 2. Configure GitHub and model connections
-
-Copy the example environment file:
-
-```bash
 cp example.env .env
+# edit .env: set OPENAI_API_KEY and GITHUB_ACCESS_TOKEN
+
+# edit repos.yaml: list the repos Coda should learn
 ```
-
-Create an [OpenAI API key](https://platform.openai.com/api-keys) and add it to `.env`:
-
-```bash
-OPENAI_API_KEY="sk-svcacct-***"
-```
-
-Create a GitHub Personal Access Token following [docs/GITHUB_ACCESS.md](/docs/GITHUB_ACCESS.md) and add it to `.env`:
-
-```bash
-GITHUB_ACCESS_TOKEN="github_pat_***"
-```
-
-### 3. Tell Coda which repos to learn
-
-Edit `repos.yaml` and add your repositories:
-
-```yaml
-repos:
-  - url: https://github.com/your-org/your-repo
-    branch: main
-```
-
-> Author's note: I recommend just using the agno repo as a starting point, so you have some test questions you can play around with.
-
-### 4. Run locally
-
-> Make sure Docker Desktop is installed and running.
 
 ```bash
 docker compose up -d --build
 ```
 
-Confirm Coda is running at [http://localhost:8000/docs](http://localhost:8000/docs).
+This starts Postgres (pgvector) and the API with hot reload. Confirm it's up at [http://localhost:8000/docs](http://localhost:8000/docs).
 
-### 5. Connect to the Web UI
+## Interfaces
 
-Coda runs on [Agno AgentOS](https://docs.agno.com/agent-os/introduction?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=docs), which gives you a web UI to chat with Coda directly — plus monitoring and debugging tools like sessions, traces, metrics, memory, and evaluations.
+- **Slack** — the main interface. Follow [docs/SLACK_CONNECT.md](docs/SLACK_CONNECT.md) to create the Slack app, then set `SLACK_TOKEN` and `SLACK_SIGNING_SECRET` in `.env` and `docker compose up -d` to restart. DM Coda directly, or `/invite @Coda` to a channel and mention it. Each thread is its own session; follow-ups in a thread don't need a re-mention.
+- **AgentOS web UI** — open [os.agno.com](https://os.agno.com), add OS → Local → `http://localhost:8000`, and connect. Gives you chat plus sessions, traces, metrics, memory, and evals.
+- **Terminal** — `python -m coda` runs a CLI chat loop against the team (needs the venv and a running database; see [Evals](#evals) for setup).
 
-1. Open [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and log in
-2. Add OS → Local → `http://localhost:8000`
-3. Click "Connect"
+## Deploy
 
-> For production deployments, replace `localhost:8000` with your deployed URL.
-
-### 6. Connect to Slack
-
-With Coda running, follow [docs/SLACK_CONNECT.md](/docs/SLACK_CONNECT.md) to create your Slack app and connect it. Once connected, add the credentials to `.env`:
+Coda ships with Railway scripts. Install the [Railway CLI](https://docs.railway.app/guides/cli), `railway login`, then:
 
 ```bash
-SLACK_TOKEN="xoxb-***"
-SLACK_SIGNING_SECRET="***"
+./scripts/railway_up.sh        # first-time: project, pgvector DB, app service, domain
+./scripts/railway_env.sh       # sync env vars after changing .env (handles multiline PEM keys)
+./scripts/railway_redeploy.sh  # redeploy after code changes
 ```
 
-Then restart to pick up the Slack credentials:
+Then point your Slack app's **Event Subscriptions** Request URL at `https://<your-domain>/slack/events`.
 
-```bash
-docker compose up -d
-```
+Two production notes:
 
-There are two ways to talk to Coda:
+- **Run a single replica.** The built-in scheduler (repo sync, daily digest) assumes one instance; multiple replicas double-fire scheduled tasks.
+- **Auth is enforced in production.** With `RUNTIME_ENV=prd` (the default outside compose), AgentOS RBAC is on: set `JWT_VERIFICATION_KEY` to the public key from [os.agno.com](https://os.agno.com) → Settings, or all requests are rejected. From agno 2.7 the key is required at boot, so set it before deploying. Local compose runs `RUNTIME_ENV=dev` with auth off.
 
-**Direct message** — find Coda under **Apps** in the Slack sidebar and message it directly:
+## Configuration
 
-```
-what repos are available?
-walk me through the auth flow
-```
-
-**In a channel** — invite Coda first, then mention it in any message:
-
-```
-/invite @Coda
-@Coda what are the open PRs?
-```
-
-Each thread is its own conversation — follow-up messages in the same thread don't need to @mention Coda again.
-
-### 7. Deploy to your cloud provider
-
-Coda comes with a script to deploy to Railway. Install the [Railway CLI](https://docs.railway.app/guides/cli), then:
-
-```bash
-railway login
-
-# First-time setup (creates project, database)
-./scripts/railway_up.sh
-
-# Sync env vars after changing .env (handles multiline keys like PEM)
-./scripts/railway_env.sh
-
-# Redeploy the app after code changes
-./scripts/railway_redeploy.sh
-```
-
-Once deployed, update your Slack app to point at the new URL:
-
-1. Copy your production URL from the Railway dashboard
-2. Go to your [Slack App settings](https://api.slack.com/apps) → **Event Subscriptions**
-3. Update the Request URL to: `https://your-production-url/slack/events`
-4. Wait for Slack to verify the endpoint
-
-If you were using ngrok for local development, you can stop it now — Slack will route all messages to your deployed instance.
-
-> See `railway.json` to adjust CPU, memory, and replica settings.
-
-### 8. Secure your deployment
-
-Production requires RBAC authentication via AgentOS. See [Security](#security) below for setup — you'll need to connect your OS at [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and add a `JWT_VERIFICATION_KEY` to your environment.
-
-## What Coda Can Do
-
-### Explore Your Code
-
-Ask a question in Slack and get an answer grounded in the actual code — with file paths and line numbers. Coda reads files, greps through them, and follows call chains to trace how things connect.
-
-```
-@Coda where is the webhook handler for Stripe events?
-@Coda walk me through the signup flow
-@Coda find all API endpoints that accept file uploads
-@Coda what breaks if I change get_customer()?
-```
-
-### Review PRs and Branches
-
-Coda pulls PR details, reads the changed files, diffs them against your conventions, and leaves inline comments — all from Slack.
-
-```
-@Coda review PR #42
-@Coda what changed on the feature/payments branch?
-@Coda compare this branch against main
-```
-
-### Manage Issues
-
-Coda doesn't just read issues — it acts on them. It categorizes, labels, comments with code-backed analysis, flags duplicates, and closes junk. Ask it to review a batch and it'll triage the whole backlog.
-
-```
-@Coda review the last 10 issues on agno, let's wrap em up
-@Coda triage the open issues and label them
-@Coda clean up the stale issues
-@Coda what are the open bugs? label them and flag the critical ones
-```
-
-### Stay on Top of Things
-
-Coda doesn't just respond — it shows up on its own. Scheduled tasks run in the background and post to your Slack channels automatically.
-
-**Daily Digest** — every morning, Coda posts a summary of your repositories: what merged yesterday, what PRs are waiting for review, what issues were opened, and what's gone stale. Like a standup that writes itself.
-
-**Issue Triage** — on a schedule, Coda's Triager agent reviews your open issues against the actual codebase, categorizes them, labels them on GitHub, and posts a summary to Slack. The same agent that handles interactive triage requests runs the daily scan — so you know it works.
-
-**Repo Sync** — Coda pulls the latest changes from all configured repositories every 5 minutes, so it's always working with current code.
-
-Schedules are registered automatically on app startup — no manual setup needed. They're idempotent, so restarting the app just updates existing schedules. To trigger a triage manually: `POST /triage-issues`.
-
-For issue triage to post to Slack, set `TRIAGE_CHANNEL` in your env to the target channel ID (right-click channel in Slack → View details → copy ID).
-
-You can also build your own scheduled tasks — automatic PR review when new PRs are opened, stale branch alerts, or convention drift detection. See `tasks/` for examples.
-
-### Plan Work
-
-Drop a feature request in Slack and Coda breaks it down into ordered, well-scoped GitHub issues — each with descriptions, code pointers, labels, and dependencies.
-
-```
-@Coda plan out adding webhook support to the payments service
-@Coda break down the auth rewrite into implementable issues
-@Coda create issues for adding rate limiting across all API endpoints
-```
-
-### Research the Web
-
-When a question goes beyond the codebase — framework docs, library APIs, error messages, security advisories — Coda searches the web and brings back answers with sources.
-
-```
-@Coda what changed in FastAPI 0.135?
-@Coda what's the recommended way to handle rate limiting in Redis?
-@Coda are there known vulnerabilities in pyjwt 2.12?
-@Coda how does OpenAI's function calling work?
-```
-
-### Write Code
-
-When you're ready, Coda writes code in isolated git worktrees and opens PRs. Your main branch is never touched.
-```
-@Coda add rate limiting to /api/v1/users using the same pattern as /orders
-@Coda fix the NoResultFound bug in payment_service
-@Coda write integration tests for the export endpoint
-```
-
-### Learn Over Time
-
-Coda gets sharper the more you use it.
-```
-Week 1:  @Coda add a new endpoint for exporting invoices
-         → Writes working code using generic patterns
-
-Week 4:  @Coda add a new endpoint for exporting invoices
-         → Follows your service layer conventions, uses your team's
-           error handling pattern, matches your naming style, adds
-           the same logging your other export endpoints use
-```
-
-Coda's learning is powered by [Agno's Learning Machines](https://docs.agno.com/learning/overview?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=docs).
-
-## What Coda Doesn't Do
-
-- **Auto-merge.** Coda opens PRs. A human merges them.
-- **Touch your main branch.** All code work happens in isolated worktrees.
-- **Send code outside your environment.** Coda runs in your infrastructure. Your code stays on your machines. The only external calls are to your configured LLM provider.
-
-## Architecture
-
-```
-Slack → Coda (Team Leader, Coordinate)
-        ├─ Coder Agent
-        │   ├─ CodingTools (read/write/edit/shell/grep/find)
-        │   ├─ GitTools (log/diff/blame/worktree)
-        │   ├─ GithubTools (PR read/create, issues)
-        │   └─ ReasoningTools (think/analyze)
-        ├─ Explorer Agent
-        │   ├─ CodingTools (read-only: read/grep/find/ls)
-        │   ├─ GitTools (log/diff/blame/show)
-        │   ├─ GithubTools (PR read/review, code search)
-        │   └─ ReasoningTools (think/analyze)
-        ├─ Planner Agent
-        │   ├─ CodingTools (read-only: read/grep/find/ls)
-        │   ├─ GitTools (log/diff/blame/show)
-        │   ├─ GithubTools (issues: create/label/search)
-        │   └─ ReasoningTools (think/analyze)
-        ├─ Researcher Agent
-        │   ├─ ParallelTools (web search/extract)
-        │   └─ ReasoningTools (think/analyze)
-        ├─ Triager Agent
-        │   ├─ CodingTools (read-only: read/grep/find/ls)
-        │   ├─ GitTools (log/diff/blame/show)
-        │   ├─ GithubTools (issues: label/comment/close/search)
-        │   └─ ReasoningTools (think/analyze)
-        ├─ SlackTools (notifications, leader only)
-        ├─ LearningMachine (conventions/patterns, shared)
-        └─ Agentic Memory (user context, leader only)
-```
-
-## Local Development
-
-```bash
-# Create and activate virtual environment
-./scripts/venv_setup.sh
-source .venv/bin/activate
-
-# Start database
-docker compose up -d coda-db
-
-# Run CLI
-python -m coda
-
-# Run evals
-python -m evals.run --category security
-
-# Format & lint
-./scripts/format.sh
-./scripts/validate.sh
-```
-
-## Environment Variables
+Set in `.env` (see [`example.env`](example.env); never commit it):
 
 | Variable | Required | Description |
-|----------|----------|-------------|
+|---|---|---|
 | `OPENAI_API_KEY` | Yes | OpenAI API key |
-| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup guide](docs/GITHUB_ACCESS.md)) |
-| `SLACK_TOKEN` | No | Slack bot token ([setup guide](docs/SLACK_CONNECT.md)) |
-| `SLACK_SIGNING_SECRET` | No | Slack request verification |
-| `DB_HOST` | No | PostgreSQL host (default: localhost) |
-| `DB_PORT` | No | PostgreSQL port (default: 5432) |
-| `DB_USER` | No | PostgreSQL user (default: ai) |
-| `DB_PASS` | No | PostgreSQL password (default: ai) |
-| `DB_DATABASE` | No | PostgreSQL database (default: ai) |
-| `PARALLEL_API_KEY` | No | Parallel API key for web research ([parallel.ai](https://parallel.ai)) |
-| `REPOS_DIR` | No | Path to cloned repos (default: /repos) |
-| `TRIAGE_CHANNEL` | No | Slack channel ID for daily issue triage |
-| `DIGEST_CHANNEL` | No | Slack channel ID for daily activity digest |
-| `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) |
+| `GITHUB_ACCESS_TOKEN` | Yes | Fine-grained PAT ([setup](docs/GITHUB_ACCESS.md)) |
+| `SLACK_TOKEN` | For Slack | Bot token ([setup](docs/SLACK_CONNECT.md)) |
+| `SLACK_SIGNING_SECRET` | For Slack | Slack request verification |
+| `PARALLEL_API_KEY` | No | Enables the Researcher agent ([parallel.ai](https://parallel.ai)) |
+| `DIGEST_CHANNEL` | No | Slack channel ID for the daily digest |
+| `TRIAGE_CHANNEL` | No | Slack channel ID for issue-triage summaries (manual runs) |
+| `JWT_VERIFICATION_KEY` | Production | RBAC public key from [os.agno.com](https://os.agno.com) |
+| `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASS` / `DB_DATABASE` | No | Postgres connection (defaults: `localhost`/`5432`/`ai`/`ai`/`ai`) |
 
-## Security
-
-Production deployments require authentication via [Agno AgentOS](https://docs.agno.com/agent-os/security/overview?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=security). This is enforced automatically — Coda enables [RBAC authorization](https://docs.agno.com/agent-os/security/rbac?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=rbac) when `RUNTIME_ENV=prd` (the default). Without a valid `JWT_VERIFICATION_KEY`, production endpoints will reject all requests.
-
-Local development (`RUNTIME_ENV=dev`, set by Docker Compose) runs without auth so you can iterate freely.
-
-### Setup
-
-1. Deploy Coda to your cloud provider (step 7 above)
-2. Open [os.agno.com](https://os.agno.com?utm_source=github&utm_medium=example-repo&utm_campaign=agent-example&utm_content=coda&utm_term=agentos) and connect your deployed OS
-3. Go to **Settings** and generate a key pair
-4. Add the public key to your `.env` (paste the full PEM block, no quotes needed):
+## Evals
 
 ```bash
-JWT_VERIFICATION_KEY=-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkq...
------END PUBLIC KEY-----
+./scripts/venv_setup.sh && source .venv/bin/activate
+docker compose up -d coda-db   # evals need the database
+
+python -m evals                        # all categories
+python -m evals --category security    # one of: security, routing, exploration, synthesis, refusal
+python -m evals --verbose              # show response previews and failure reasons
 ```
 
-5. Push to production and redeploy:
+Lint and type-check with `./scripts/format.sh` and `./scripts/validate.sh`.
 
-```bash
-./scripts/railway_env.sh
-./scripts/railway_redeploy.sh
-```
+## Source / links
 
-The Agno control plane handles JWT issuance, session management, traces, metrics, and the web UI. See the [AgentOS Security docs](https://docs.agno.com/agent-os/security/overview) for details.
-
-## Running Local + Production
-
-If Coda is already deployed (e.g. on Railway), you can run a second instance locally for development. The key constraint is that each Slack app can only deliver events to one URL, so you need a separate Slack app for local.
-
-### 1. Create a "Coda Dev" Slack app
-
-Follow the same steps in [docs/SLACK_CONNECT.md](docs/SLACK_CONNECT.md), but create a new app (e.g. "Coda Dev") in your workspace. You'll get a separate bot token and signing secret.
-
-### 2. Set up a local env file
-
-```bash
-cp .env .env.local
-```
-
-Edit `.env.local` and replace the Slack credentials with the ones from your "Coda Dev" app:
-
-```bash
-# .env.local — local development
-SLACK_TOKEN=xoxb-***-dev-token
-SLACK_SIGNING_SECRET=***-dev-secret
-
-# These can stay the same as production
-OPENAI_API_KEY=sk-***
-GITHUB_ACCESS_TOKEN=github_pat_***
-```
-
-### 3. Expose localhost to Slack
-
-Slack needs a public URL to send events to. Use [ngrok](https://ngrok.com):
-
-```bash
-ngrok http 8000
-```
-
-Copy the `https://...ngrok.io` URL. In your "Coda Dev" Slack app settings, set the Request URL to:
-
-```
-https://<your-id>.ngrok-free.app/slack/events
-```
-
-### 4. Run locally
-
-```bash
-docker compose --env-file .env.local up -d --build
-```
-
-Your production instance on Railway continues to run with `.env` and the production Slack app. Your local instance runs with `.env.local` and the dev Slack app. Both work independently.
-
-> **Tip:** Add `.env.local` to `.gitignore` if it isn't already. Never commit either env file.
+- [docs/SPEC.md](docs/SPEC.md) — full product and architecture spec
+- [docs/GITHUB_ACCESS.md](docs/GITHUB_ACCESS.md) — GitHub token setup
+- [docs/SLACK_CONNECT.md](docs/SLACK_CONNECT.md) — Slack app setup (to run local and production side by side, create a second "Coda Dev" Slack app and start compose with `--env-file .env.local`)
+- [Agno docs](https://docs.agno.com) · [AgentOS security](https://docs.agno.com/agent-os/security/overview)
 
 <p align="center">Built on <a href="https://github.com/agno-agi/agno">Agno</a> · the runtime for agentic software</p>
